@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>simonhildell.xyz — a playground</title>
+  <meta name="description" content="A playground city by Simon Hildell. Walk the rain-soaked streets, find the anomalies, find the workstation." />
+  <meta name="theme-color" content="#07080c" />
+  <meta property="og:title" content="simonhildell.xyz — a playground" />
+  <meta property="og:description" content="Walk a neon megacity, find anomalies built from Simon Hildell's projects, and find his workstation." />
+  <meta property="og:image" content="https://www.simonhildell.xyz/img/og.jpg" />
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script type="importmap">
+    { "imports": {
+      "three": "./vendor/three/three.module.min.js",
+      "three/addons/": "./vendor/three/jsm/"
+    } }
+  </script>
+</head>
+<body>
+  <canvas id="c"></canvas>
+
+  <!-- intro -->
+  <div id="intro">
+    <div class="intro-inner">
+      <div class="kicker">SIMON HILDELL PRESENTS</div>
+      <h1 class="glitch" data-text="SIMONHILDELL.XYZ">SIMONHILDELL.XYZ</h1>
+      <p class="sub">A playground city. Somewhere in it are <b>anomalies</b>, glitches made of things I have built.<br />Somewhere in it is my <b>workstation</b>.</p>
+      <div class="controls desktop-only">
+        <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move</div>
+        <div><kbd>SHIFT</kbd> run · <kbd>SPACE</kbd> jump</div>
+        <div><kbd>DRAG</kbd> look · <kbd>E</kbd> interact</div>
+      </div>
+      <div class="controls touch-only">
+        <div>Left thumb: move (push far to run)</div>
+        <div>Right thumb: look · buttons to interact</div>
+      </div>
+      <button id="enter" disabled><span id="enter-label">LOADING…</span></button>
+      <p class="fine">Best with sound on. Music via Spotify at the jukebox.</p>
+    </div>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div id="counter">
+      <div class="label">ANOMALIES</div>
+      <div class="num"><span id="count">0</span><span class="of">/9</span></div>
+      <div id="pips"></div>
+      <div id="objective">Explore. Find the glitches.</div>
+    </div>
+    <div id="top-btns">
+      <button id="btn-music" title="Jukebox">♪</button>
+      <button id="btn-sound" title="Ambient sound">SND</button>
+      <button id="btn-help" title="Help">?</button>
+    </div>
+    <canvas id="radar" width="280" height="280"></canvas>
+    <div id="nowplaying" class="hidden"><span class="dot"></span><span id="np-text"></span></div>
+    <div id="prompt" class="hidden"><kbd class="desktop-only">E</kbd><span id="prompt-text"></span></div>
+    <button id="act-btn" class="hidden">INTERACT</button>
+    <button id="jump-btn" class="touch-only">JUMP</button>
+    <div id="toast" class="hidden"></div>
+  </div>
+
+  <!-- anomaly card -->
+  <div id="card" class="hidden" role="dialog" aria-live="polite">
+    <button class="close" id="card-close" aria-label="Close">✕</button>
+    <div class="card-kicker">ANOMALY <span id="card-n"></span> · DETECTED</div>
+    <h2 id="card-title"></h2>
+    <div id="card-tag"></div>
+    <div id="card-img-wrap"><img id="card-img" alt="" /></div>
+    <p id="card-text"></p>
+    <div id="card-credit"></div>
+  </div>
+
+  <!-- jukebox -->
+  <div id="jukebox" class="hidden" role="dialog">
+    <div class="jb-head">
+      <div>
+        <div class="jb-kicker">JUKEBOX</div>
+        <div class="jb-title">Works insta</div>
+      </div>
+      <button class="close" id="jb-close" aria-label="Close">✕</button>
+    </div>
+    <div class="jb-controls">
+      <button id="jb-prev">◀◀</button>
+      <button id="jb-play">▶</button>
+      <button id="jb-next">▶▶</button>
+      <button id="jb-shuffle">SHUFFLE</button>
+    </div>
+    <input id="jb-search" placeholder="search the playlist…" autocomplete="off" />
+    <ol id="jb-list"></ol>
+    <div class="jb-foot">Full tracks if you're logged in to Spotify in this browser, 30-second previews otherwise. <a id="jb-open" target="_blank" rel="noopener">Open the playlist in Spotify ↗</a></div>
+  </div>
+  <div id="spotify-dock" class="hidden"><div id="spotify-embed"></div></div>
+
+  <!-- desk -->
+  <div id="desk-ui" class="hidden">
+    <a id="desk-open" class="hidden" href="https://www.simonhildell.com" target="_blank" rel="noopener">OPEN SIMONHILDELL.COM ↗</a>
+    <button id="desk-back">BACK TO THE CITY</button>
+  </div>
+
+  <!-- help -->
+  <div id="help" class="hidden">
+    <div class="help-inner">
+      <h3>HOW TO PLAY</h3>
+      <p>Walk the city and find the <b>9 anomalies</b>. Look for the light pillars and the flickering glyphs. The radar shows nearby signals.</p>
+      <p>When three have been found, a beacon lights up over the <b>studio</b>. Find the workstation to finish.</p>
+      <div class="controls desktop-only"><div><kbd>WASD</kbd> move · <kbd>SHIFT</kbd> run · <kbd>SPACE</kbd> jump · <kbd>DRAG</kbd> look · <kbd>E</kbd> interact · <kbd>M</kbd> jukebox</div></div>
+      <div class="controls touch-only"><div>Left thumb move · right thumb look</div></div>
+      <button id="help-reset">RESET PROGRESS</button>
+      <button id="help-close">CLOSE</button>
+    </div>
+  </div>
+
+  <div id="joy"><div id="joy-knob"></div></div>
+  <noscript>This playground needs JavaScript and WebGL. The curated portfolio lives at <a href="https://www.simonhildell.com">simonhildell.com</a>.</noscript>
+  <div id="fallback" class="hidden">Your browser can't run WebGL. The curated portfolio lives at <a href="https://www.simonhildell.com">simonhildell.com</a>.</div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
