@@ -4,58 +4,71 @@ import { GRID, storage, mulberry32 } from './util.js';
 
 const C = GRID.cellCenter;
 
+// Links into the curated site. If a route changes on simonhildell.com, update it here.
+const COM = 'https://www.simonhildell.com';
+const P = (id) => `${COM}/#/project/${id}`;
+
 export const ANOMALY_DATA = [
   {
     id: 'zephyr', cell: [4, 0], color: '#ff3df2', radius: 13,
-    title: 'ZEPHYR', tag: 'Academic project — 2026 · Hässleholm',
+    title: 'ZEPHYR', tag: 'Academic project · 2026 · Hässleholm',
     text: 'A breathing transport hub. An origami-rooted panel system that can expand in three dimensions, sculpted by a full week of projected passenger flow. Not to optimize the space. Just as a gesture.',
     credit: 'With Finn Heinecke & Maja Popovic', img: 'img/zephyr.webp', imgRemote: 'https://simonhildell.com/assets/zephyrfront2-9Ll4spYj.webp',
+    link: P('zephyr'),
   },
   {
     id: 'nakagin', cell: [0, 0], color: '#ff2a55', radius: 12,
-    title: 'NAKAGIN CAPSULE', tag: 'Academic project — 2025 · Rhino → Grasshopper → Unreal',
+    title: 'NAKAGIN CAPSULE', tag: 'Academic project · 2025 · Rhino → Grasshopper → Unreal',
     text: 'The goal was to learn the Rhino, Grasshopper and Unreal Engine workflow. We went for the cyberpunky aesthetic and the narrative that some experiment went wrong.',
     credit: 'With Finn Heinecke & Mikolaj Szczerski', img: 'img/nakagin.webp', imgRemote: 'https://simonhildell.com/assets/growingfront-Bfpc402t.webp',
+    link: P('nakagin-capsule'),
   },
   {
     id: 'rainhub', cell: [1, 3], color: '#4fd8ff', radius: 12,
-    title: 'RAIN HUB', tag: 'Bachelor project — 2025 · Mölndal',
+    title: 'RAIN HUB', tag: 'Bachelor project · 2025 · Mölndal',
     text: 'A youth center that uses rain as a resource rather than an obstacle. The roof responds to how the rain falls on it, and hosts the activities that normally disappear for teens when it rains.',
     img: 'img/rainhub.webp', imgRemote: 'https://simonhildell.com/assets/project-3-DcDQa-aa.webp',
+    link: P('rain-hub'),
   },
   {
     id: 'tratten', cell: [3, 3], color: '#8dff6a', radius: 12,
-    title: 'CAMPUSTRATTEN', tag: 'Competition — winning entry',
-    text: '“Vi ses vid Campustratten.” Three hexagonal timber pavilions, a sibling to the LTH fountain. They collect rain through a green roof, filter it in the central column and offer a bike-washing station.',
-    credit: 'Tapered GLT pillars · welded steel connectors',
+    title: 'CAMPUSTRATTEN', tag: 'Competition · winning entry',
+    text: '“Vi ses vid Campustratten.” Three hexagonal timber pavilions, a sibling to the LTH fountain. Each funnel roof stands on a single leg: rain is collected through the green roof, filtered in the leg and used at a bike-washing station.',
+    credit: 'Tapered GLT · welded steel connectors',
+    link: COM, linkNote: 'No project page for this one yet, so the link takes you to simonhildell.com.',
   },
   {
     id: 'naturum', cell: [0, 2], color: '#ff5a8a', radius: 12,
-    title: 'NATURUM', tag: 'Academic project — 2025 · Breanäs · 550 m²',
+    title: 'NATURUM', tag: 'Academic project · 2025 · Breanäs · 550 m²',
     text: 'A hyperlocal public building using pieces the forest industry normally discards: crooked trunks, straightened by design. It sits on the edge of experimental and feasible.',
     credit: 'With Theo Edfast', img: 'img/naturum.webp', imgRemote: 'https://simonhildell.com/assets/straighteningfront-BXVrdMM-.webp',
+    link: P('naturum'),
   },
   {
     id: 'studios', cell: [4, 2], color: '#f4f4ff', radius: 12,
-    title: 'ARTIST STUDIOS', tag: 'Academic project — 2024 · Neukölln, Berlin',
+    title: 'ARTIST STUDIOS', tag: 'Academic project · 2024 · Neukölln, Berlin',
     text: 'Public and private spaces for digital artists. An organic structure runs through the building from bottom to top, reminding passers-by of the public garden on the roof.',
     img: 'img/studios.webp', imgRemote: 'https://simonhildell.com/assets/project-4-COizQxHR.webp',
+    link: P('artist-studios'),
   },
   {
-    id: 'audio', cell: [2, 2], color: '#d24dff', radius: 13, offset: [0, 0],
-    title: 'AUDIO INTERACTIVE', tag: 'Academic + hobby project — 2026 · Python, TouchDesigner',
+    id: 'audio', cell: [2, 2], color: '#d24dff', radius: 13, dy: 99,
+    title: 'AUDIO INTERACTIVE', tag: 'Academic + hobby project · 2026 · Python, TouchDesigner',
     text: 'Geometry that uses sound as its input to generate visuals. Put a song on the jukebox and watch the cloud react.',
     credit: 'Built for “Programming for architects”', img: 'img/audio.webp', imgRemote: 'https://simonhildell.com/assets/sound2front-DCHmrcet.webp',
+    link: P('audio-interactive'),
   },
   {
-    id: 'printer', cell: [1, 1], color: '#ffb13d', radius: 10,
-    title: 'THE PRINTER', tag: 'Hobby: fabrication · Bambu Lab A1',
+    id: 'printer', cell: [1, 1], color: '#ffb13d', radius: 9, y: 12,
+    title: 'THE PRINTER', tag: 'Hobby: fabrication · Bambu Lab A1 · level 2',
     text: 'A 1:20 press-fit model of Campustratten, printed in PLA: 40 parts on 3 build plates, snapping together into a 248 × 215 × 141 mm pavilion.',
+    link: COM, linkNote: 'No project page for this one yet, so the link takes you to simonhildell.com.',
   },
   {
-    id: 'finch', cell: [3, 1], color: '#39ffb0', radius: 11,
-    title: 'FINCH 3D', tag: 'Day job',
+    id: 'finch', cell: [3, 1], offset: [-8, -2], color: '#39ffb0', radius: 10, y: 6,
+    title: 'FINCH 3D', tag: 'Day job · level 1',
     text: 'Partnerships and external communications at Finch 3D: webinars with partners, tutorials, and helping architectural tools talk to each other.',
+    link: COM, linkNote: 'No project page for this one yet, so the link takes you to simonhildell.com.',
   },
 ];
 
@@ -65,10 +78,11 @@ export class Anomalies {
     this.found = new Set(storage.get('shx-found', []));
     this.items = [];
     this.musicLevel = 0;
+    this.active = true;
     for (const d of ANOMALY_DATA) {
       const g = new THREE.Group();
       const [ox, oz] = d.offset || [0, 0];
-      g.position.set(C(d.cell[0]) + ox, 0, C(d.cell[1]) + oz);
+      g.position.set(C(d.cell[0]) + ox, d.y ?? GRID.kerb, C(d.cell[1]) + oz);
       scene.add(g);
       const upd = BUILDERS[d.id](g, world, this);
       const ag = new THREE.Group(); ag.position.copy(g.position); scene.add(ag);
@@ -80,16 +94,28 @@ export class Anomalies {
 
   get count() { return this.found.size; }
 
+  // play again: everything becomes undiscovered
+  reset() {
+    this.found.clear();
+    storage.set('shx-found', []);
+    for (const it of this.items) { it.found = false; it.aura.setFound(false); it.cooldown = true; }
+  }
+
+  // short burst: every pillar flares at once (celebration)
+  flareAll() { for (const it of this.items) it.aura.flare(); }
+
   update(t, dt, player) {
     for (const it of this.items) {
       const dx = player.pos.x - it.g.position.x, dz = player.pos.z - it.g.position.z;
       const dist = Math.hypot(dx, dz);
+      const dy = Math.abs(player.pos.y - it.g.position.y);
       it.dist = dist;
       // update only when reasonably near (plus always update cheap aura)
       it.g.visible = dist < 118;
       if (it.g.visible) it.upd && it.upd(t, dt, dist);
       it.aura.update(t, dt);
-      if (!it.found && dist < it.d.radius) {
+      if (it.cooldown && dist > it.d.radius + 2) it.cooldown = false;
+      if (!it.found && !it.cooldown && this.active && dist < it.d.radius && dy < (it.d.dy ?? 3.5)) {
         it.found = true;
         this.found.add(it.d.id);
         storage.set('shx-found', [...this.found]);
@@ -141,15 +167,18 @@ function makeAura(d, g) {
   const glyph = new THREE.Mesh(new THREE.OctahedronGeometry(0.9, 0), new THREE.MeshBasicMaterial({ color: col.clone().multiplyScalar(2.2), wireframe: true, toneMapped: false }));
   glyph.position.y = 24;
   g.add(glyph);
-  let amt = 1, target = 1;
+  let amt = 1, target = 1, flare = 0;
   return {
     setFound(f, instant) { target = f ? 0.12 : 1; if (instant) amt = target; },
+    flare() { flare = 3.5; },
     update(t, dt) {
+      flare = Math.max(0, flare - dt);
       amt += (target - amt) * Math.min(1, dt * 1.5);
+      const f = flare > 0 ? (0.6 + 0.4 * Math.sin(t * 40)) * Math.min(1, flare) * 3 : 0;
       ringMat.uniforms.uTime.value = t; pillarMat.uniforms.uTime.value = t;
-      ringMat.uniforms.uAmt.value = 0.25 + amt * 0.75; pillarMat.uniforms.uAmt.value = amt;
+      ringMat.uniforms.uAmt.value = 0.25 + amt * 0.75 + f; pillarMat.uniforms.uAmt.value = amt + f;
       glyph.rotation.y = t * 1.3; glyph.position.y = 24 + Math.sin(t * 1.7) * 0.6;
-      glyph.visible = amt > 0.2;
+      glyph.visible = amt > 0.2 || f > 0;
     },
   };
 }
@@ -192,7 +221,7 @@ const BUILDERS = {
     g.add(pulses);
     // district context blocks under it (like the site model)
     const blk = std(0x2a1830, { emissive: 0x3a0a40, emissiveIntensity: 0.6 });
-    [[-12, 8, 5, 2, 4], [-5, 9, 4, 3, 3], [8, 9, 6, 2.5, 4], [12, -9, 5, 4, 3], [-10, -9, 6, 3, 4]].forEach(([x, z, w, h, d]) => {
+    [[-9, 8, 4, 2, 3], [-3, 8.5, 3, 3, 2.5], [6, 8.5, 4, 2.5, 3], [9, -8.5, 4, 4, 3], [-8, -8.5, 4, 3, 3]].forEach(([x, z, w, h, d]) => {
       const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), blk); m.position.set(x, h / 2, z); g.add(m);
     });
     const light = new THREE.PointLight(0xff3df2, 18, 30, 1.5); light.position.set(0, 5, 0); g.add(light);
@@ -307,7 +336,7 @@ const BUILDERS = {
   },
 
   rainhub(g, world) {
-    const W = 24, D = 18, NX = 48, NZ = 36;
+    const W = 21, D = 16, NX = 42, NZ = 32;
     const f = (x, z) => 5.6 + 1.7 * Math.sin(x * 0.23 + 0.6) * Math.cos(z * 0.26) + 0.07 * x;
     const pos = [], bary = [], nrm = [];
     const P = (i, j) => { const x = (i / NX - 0.5) * W, z = (j / NZ - 0.5) * D; return [x, f(x, z), z]; };
@@ -348,7 +377,7 @@ const BUILDERS = {
     g.add(roof);
     // columns
     const colM = std(0x9aa0a8, { metalness: 0.6, roughness: 0.3 });
-    for (const [x, z] of [[-8, -5], [-8, 5], [0, -6], [0, 6], [8, -5], [8, 5]]) {
+    for (const [x, z] of [[-7, -4.5], [-7, 4.5], [0, -5.5], [0, 5.5], [7, -4.5], [7, 4.5]]) {
       const h = f(x, z);
       const c = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.25, h, 10), colM);
       c.position.set(x, h / 2, z); g.add(c);
@@ -356,7 +385,7 @@ const BUILDERS = {
     }
     // glowing pool at low point + local heavy rain that stops on the roof
     const pool = new THREE.Mesh(new THREE.CircleGeometry(4.5, 40), new THREE.MeshStandardMaterial({ color: 0x0a2a3a, emissive: 0x0a6a8a, emissiveIntensity: 0.9, roughness: 0.05, metalness: 0.8 }));
-    pool.rotation.x = -Math.PI / 2; pool.position.set(-11, 0.04, 0); g.add(pool);
+    pool.rotation.x = -Math.PI / 2; pool.position.set(-9.5, 0.04, 0); g.add(pool);
     const N = 2200;
     const sp = new Float32Array(N * 2 * 3), sd = new Float32Array(N * 2 * 4);
     for (let i = 0; i < N; i++) { const s = [Math.random(), Math.random(), Math.random(), Math.random()]; for (let k = 0; k < 2; k++) { sp.set([0, k, 0], (i * 2 + k) * 3); sd.set(s, (i * 2 + k) * 4); } }
@@ -367,8 +396,8 @@ const BUILDERS = {
       vertexShader: `attribute vec4 seed; uniform float uTime; varying float vA;
         float f(float x,float z){ return 5.6 + 1.7*sin(x*0.23+0.6)*cos(z*0.26) + 0.07*x; }
         void main(){
-          float x = (seed.x-0.5)*26.0, z=(seed.z-0.5)*20.0;
-          float floorY = (abs(x)<12.0 && abs(z)<9.0) ? f(x,z) : 0.0;
+          float x = (seed.x-0.5)*23.0, z=(seed.z-0.5)*18.0;
+          float floorY = (abs(x)<10.5 && abs(z)<8.0) ? f(x,z) : 0.0;
           float H = 30.0;
           float y = floorY + mod(seed.y*H - uTime*(24.0+seed.w*8.0), H);
           vec3 p = vec3(x, y + position.y*1.1, z);
@@ -394,18 +423,14 @@ const BUILDERS = {
 
   tratten(g, world) {
     const upd = [];
-    const spots = [0, 1, 2].map((k) => { const a = k * Math.PI * 2 / 3 + 0.3; return [Math.cos(a) * 7, Math.sin(a) * 7]; });
+    const spots = [0, 1, 2].map((k) => { const a = k * Math.PI * 2 / 3 + 0.3; return [Math.cos(a) * 6.2, Math.sin(a) * 6.2]; });
     for (const [x, z] of spots) {
       const p = buildPavilion(1);
       p.group.position.set(x, 0, z);
       p.group.rotation.y = Math.random();
       g.add(p.group);
       upd.push(p.update);
-      world.colliderCircles.push({ x: g.position.x + x, z: g.position.z + z, r: 0.45 });
-      for (let k = 0; k < 6; k++) {
-        const a = k * Math.PI / 3 + p.group.rotation.y;
-        world.colliderCircles.push({ x: g.position.x + x + Math.cos(a) * 3.6, z: g.position.z + z - Math.sin(a) * 3.6, r: 0.25 });
-      }
+      world.colliderCircles.push({ x: g.position.x + x, z: g.position.z + z, r: 0.6 });
     }
     const light = new THREE.PointLight(0xffc27a, 12, 22, 1.4); light.position.set(0, 2.2, 0); g.add(light);
     return (t) => upd.forEach((f) => f(t));
@@ -579,7 +604,7 @@ const BUILDERS = {
     spool.add(sp1, sp2, fil); spool.position.set(0.95 * S, 1.6 * S, -0.35 * S); g.add(spool);
     const holo = new THREE.Mesh(new THREE.BoxGeometry(1.9 * S, 2.1 * S, 1.8 * S), holoMaterial('#ffb13d', { opacity: 0.015, rim: 0.35 }));
     holo.position.y = 1.02 * S; g.add(holo);
-    world.colliders.push({ x0: g.position.x - 1.0 * S, x1: g.position.x + 1.1 * S, z0: g.position.z - 1.0 * S, z1: g.position.z + 1.0 * S, h: 4.3, noCam: true });
+    world.colliders.push({ x0: g.position.x - 1.0 * S, x1: g.position.x + 1.1 * S, z0: g.position.z - 1.0 * S, z1: g.position.z + 1.0 * S, y0: g.position.y, h: 6, noCam: true });
     const light = new THREE.PointLight(0xffb13d, 10, 18, 1.4); light.position.set(0, 3.2 * S, 2.5 * S); g.add(light);
     const PH = (3.8 + 0.3) * 0.24; // printed height (m)
     const tmp = new THREE.Vector3();
@@ -610,11 +635,11 @@ const BUILDERS = {
     screen.position.set(0, 7.2, -2); g.add(screen);
     const frame = std(0x16171b, { metalness: 0.7, roughness: 0.4 });
     const back = new THREE.Mesh(new THREE.BoxGeometry(11.6, 7.5, 0.4), frame); back.position.set(0, 7.2, -2.25); g.add(back);
-    for (const x of [-4.5, 4.5]) { const leg = new THREE.Mesh(new THREE.BoxGeometry(0.5, 3.5, 0.5), frame); leg.position.set(x, 1.75, -2.25); g.add(leg); world.colliderCircles.push({ x: g.position.x + x, z: g.position.z - 2.25, r: 0.4 }); }
+    for (const x of [-4.5, 4.5]) { const leg = new THREE.Mesh(new THREE.BoxGeometry(0.5, 3.5, 0.5), frame); leg.position.set(x, 1.75, -2.25); g.add(leg); world.colliderCircles.push({ x: g.position.x + x, z: g.position.z - 2.25, r: 0.4, y0: g.position.y, h: 4 }); }
     // kiosk
     const kiosk = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.1, 0.8), frame); kiosk.position.set(0, 0.55, 2.5); kiosk.rotation.x = 0; g.add(kiosk);
     const kscr = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.6), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false })); kscr.position.set(0, 1.13, 2.45); kscr.rotation.x = -Math.PI / 2 + 0.5; g.add(kscr);
-    world.colliders.push({ x0: g.position.x - 0.8, x1: g.position.x + 0.8, z0: g.position.z + 2.1, z1: g.position.z + 2.9, h: 1.2, noCam: true });
+    world.colliders.push({ x0: g.position.x - 0.8, x1: g.position.x + 0.8, z0: g.position.z + 2.1, z1: g.position.z + 2.9, y0: g.position.y, h: 1.2, noCam: true });
     const light = new THREE.PointLight(0x39ffb0, 12, 22, 1.4); light.position.set(0, 4, 3); g.add(light);
     // generative plan animation
     let rooms = [], gen = 0, last = -1, typed = 0;
@@ -667,7 +692,7 @@ const BUILDERS = {
   },
 };
 
-// Campustratten pavilion: hexagonal funnel roof on tapered GLT pillars, rain-filter column in the middle.
+// Campustratten pavilion: a hexagonal funnel roof on ONE central tapered GLT leg that doubles as the rain filter.
 export function buildPavilion(s = 1, opts = {}) {
   const group = new THREE.Group();
   const clip = opts.clip || null;
@@ -676,48 +701,48 @@ export function buildPavilion(s = 1, opts = {}) {
   const green = opts.pla ? wood : mk(0x3f6a2c, { roughness: 0.9, emissive: 0x0b2a08 });
   const steel = opts.pla ? wood : mk(0x2a2b30, { metalness: 0.8, roughness: 0.35 });
   const concrete = opts.pla ? wood : mk(0x777777, { roughness: 0.9 });
-  const R = 4.4 * s, Rp = 3.6 * s, H = 3.8 * s, Hc = 3.0 * s;
+  const R = 4.4 * s, H = 3.8 * s, Hc = 2.9 * s;
   // pad
-  const pad = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.95, R * 0.98, 0.15 * s, 6), concrete); pad.position.y = 0.075 * s; group.add(pad);
-  // pillars (tapered, leaning out)
+  const pad = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.55, R * 0.6, 0.15 * s, 6), concrete); pad.position.y = 0.075 * s; group.add(pad);
+  // the leg: six tapered GLT staves around a glass filter tube
   for (let k = 0; k < 6; k++) {
-    const a = k * Math.PI / 3;
-    const p = new THREE.Mesh(new THREE.CylinderGeometry(0.16 * s, 0.1 * s, H, 4), wood);
-    p.position.set(Math.cos(a) * Rp, H / 2, -Math.sin(a) * Rp);
-    p.rotation.y = a + Math.PI / 4;
-    p.rotation.z = 0.05 * Math.cos(a); p.rotation.x = 0.05 * Math.sin(a);
-    group.add(p);
-    const con = new THREE.Mesh(new THREE.BoxGeometry(0.34 * s, 0.3 * s, 0.34 * s), steel);
-    con.position.set(Math.cos(a) * Rp, H - 0.1 * s, -Math.sin(a) * Rp); group.add(con);
+    const a = k * Math.PI / 3 + Math.PI / 6;
+    const st = new THREE.Mesh(new THREE.BoxGeometry(0.14 * s, Hc, 0.2 * s), wood);
+    const rm = 0.36 * s;
+    st.position.set(Math.cos(a) * rm, Hc / 2, -Math.sin(a) * rm);
+    st.rotation.y = a;
+    st.rotation.z = -0.07; // leans out towards the roof: wider at the top
+    group.add(st);
   }
-  // funnel roof: outer hex ring high, inner ring low
-  const roofGeo = new THREE.CylinderGeometry(R, 0.45 * s, H - Hc, 6, 1, true);
-  const roof = new THREE.Mesh(roofGeo, green); roof.position.y = (H + Hc) / 2 + 0.1 * s; group.add(roof);
-  const under = new THREE.Mesh(new THREE.CylinderGeometry(R, 0.45 * s, H - Hc, 6, 1, true), wood); under.position.y = (H + Hc) / 2 + 0.02 * s; group.add(under);
+  const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.62 * s, 0.5 * s, 0.3 * s, 6), steel); collar.position.y = Hc - 0.05 * s; group.add(collar);
+  const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.42 * s, 0.5 * s, 0.25 * s, 6), steel); foot.position.y = 0.27 * s; group.add(foot);
+  // funnel roof: outer hex ring high, inner ring low, resting on the leg
+  const roof = new THREE.Mesh(new THREE.CylinderGeometry(R, 0.55 * s, H - Hc, 6, 1, true), green); roof.position.y = (H + Hc) / 2 + 0.1 * s; group.add(roof);
+  const under = new THREE.Mesh(new THREE.CylinderGeometry(R, 0.55 * s, H - Hc, 6, 1, true), wood); under.position.y = (H + Hc) / 2 + 0.02 * s; group.add(under);
   const fascia = new THREE.Mesh(new THREE.CylinderGeometry(R + 0.05 * s, R + 0.05 * s, 0.28 * s, 6, 1, true), wood); fascia.position.y = H + 0.1 * s; group.add(fascia);
-  // beams (radial)
+  // cantilevered radial beams from the leg top out to the roof corners
+  const L = Math.hypot(R, H - Hc), ang = Math.atan2(H - Hc, R);
   for (let k = 0; k < 6; k++) {
     const a = k * Math.PI / 3;
-    const b = new THREE.Mesh(new THREE.BoxGeometry(Rp, 0.2 * s, 0.14 * s), wood);
-    b.position.set(Math.cos(a) * Rp / 2, (H + Hc) / 2, -Math.sin(a) * Rp / 2);
-    b.rotation.y = a; b.rotation.z = Math.atan2(H - Hc, Rp) * 0.9;
+    const b = new THREE.Mesh(new THREE.BoxGeometry(L, 0.24 * s, 0.16 * s), wood);
+    b.position.set(Math.cos(a) * R / 2, (H + Hc) / 2 - 0.05 * s, -Math.sin(a) * R / 2);
+    b.rotation.y = a; b.rotation.z = ang;
     group.add(b);
   }
-  // central filter column
   let waterU = null;
   if (opts.pla) {
-    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.35 * s, 0.35 * s, Hc, 16), wood); col.position.y = Hc / 2; group.add(col);
+    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.3 * s, 0.26 * s, Hc, 12), wood); col.position.y = Hc / 2; group.add(col);
   } else {
     waterU = { uTime: { value: 0 } };
-    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.35 * s, 0.35 * s, Hc, 20, 1, true), new THREE.ShaderMaterial({
+    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.24 * s, 0.2 * s, Hc, 20, 1, true), new THREE.ShaderMaterial({
       uniforms: waterU, transparent: true, side: THREE.DoubleSide, depthWrite: false,
       vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);} `,
       fragmentShader: `uniform float uTime; varying vec2 vUv; void main(){ float s = 0.5+0.5*sin(vUv.y*40.0 + uTime*6.0 + sin(vUv.x*30.0)*1.5);
-        vec3 c = mix(vec3(0.1,0.5,0.8), vec3(0.6,1.4,1.8), s); float layers = step(0.8, fract(vUv.y*4.0))*0.5; gl_FragColor = vec4(c + layers, 0.55); }`,
+        vec3 c = mix(vec3(0.1,0.5,0.8), vec3(0.6,1.4,1.8), s); float layers = step(0.8, fract(vUv.y*4.0))*0.5; gl_FragColor = vec4(c + layers, 0.6); }`,
     }));
     col.position.y = Hc / 2; group.add(col);
     // bike-washing spout
-    const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.04 * s, 0.04 * s, 0.5 * s, 8), steel); sp.rotation.z = Math.PI / 2; sp.position.set(0.55 * s, 1.0 * s, 0); group.add(sp);
+    const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.04 * s, 0.04 * s, 0.6 * s, 8), steel); sp.rotation.z = Math.PI / 2; sp.position.set(0.7 * s, 1.0 * s, 0); group.add(sp);
   }
   return { group, update: (t) => { if (waterU) waterU.uTime.value = t; } };
 }

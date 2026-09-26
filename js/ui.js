@@ -40,6 +40,9 @@ export class UI {
       img.onerror = () => { if (d.imgRemote && img.src !== d.imgRemote) img.src = d.imgRemote; else wrap.classList.add('hidden'); };
       img.src = d.img; img.alt = d.title;
     } else wrap.classList.add('hidden');
+    $('card-link').textContent = d.linkNote ? 'OPEN SIMONHILDELL.COM ↗' : 'OPEN THE PROJECT ↗';
+    $('card-note').textContent = d.linkNote || '';
+    this.cardData = d;
     card.classList.remove('hidden');
     card.style.animation = 'none'; void card.offsetWidth; card.style.animation = '';
   }
@@ -66,7 +69,7 @@ export class UI {
   nowPlaying(track) {
     const n = $('nowplaying');
     if (!track) { n.classList.add('hidden'); return; }
-    $('np-text').textContent = `${track[1]} — ${track[2]}`;
+    $('np-text').textContent = `${track[1]} · ${track[2]}`;
     n.classList.remove('hidden');
   }
 

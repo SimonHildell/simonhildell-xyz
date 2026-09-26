@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GeoBuilder } from './geo.js';
 import { windowTexture, groundTextures, signTexture, radialTexture, billboardTexture } from './textures.js';
 import { mulberry32, GRID, QUALITY, smoothstep } from './util.js';
+import { buildStreetLife } from './streetlife.js';
 
 // Cells that are kept open for anomalies / special places.
 export const SPECIAL_CELLS = {
@@ -27,7 +28,7 @@ const BILLBOARDS = [
   [['NOCTURNE', 'the city never sleeps'], '#ff3355', '#1a0010'],
 ];
 
-export function districtT(x) { return smoothstep(-45, 45, x); } // 0 = dust/orange west, 1 = neon/rain east
+export function districtT(x) { return smoothstep(-38, 38, x); } // 0 = dust/orange west, 1 = neon/rain east
 
 export function buildCity(scene, world, renderer) {
   const rnd = mulberry32(2049);
@@ -71,7 +72,7 @@ export function buildCity(scene, world, renderer) {
       const y = 4.5 + rnd() * Math.min(30, h - 6);
       neon.box(cx, y, cz, w + 0.14, 0.18, d + 0.14, { top: false, color: neonColor(rnd, cx).map((c) => c * 2.2) });
     }
-    if (!opts.noCollide) colliders.push({ x0: cx - w / 2, x1: cx + w / 2, z0: cz - d / 2, z1: cz + d / 2 });
+    if (!opts.noCollide) colliders.push({ x0: cx - w / 2, x1: cx + w / 2, z0: cz - d / 2, z1: cz + d / 2, h: opts.collideH ?? 999 });
     // blade signs
     if (!opts.noSign && rnd() < 0.7) {
       const n = 1 + (rnd() * 2 | 0);
@@ -94,63 +95,69 @@ export function buildCity(scene, world, renderer) {
     return { word, col, x, y, z, ry };
   };
 
-  // ---- blocks
+  // ---- blocks (23 m buildable, 27 m raised slab, 7 m roads)
   const cellKeys = [];
   for (let i = 0; i < 5; i++) for (let j = 0; j < 5; j++) cellKeys.push([i, j]);
-  const B = 14; // half block size (28 m blocks)
+  const BW = GRID.block * 2, BH = BW / 2;
   for (const [i, j] of cellKeys) {
     const key = `${i},${j}`;
     const cx = GRID.cellCenter(i), cz = GRID.cellCenter(j);
     const special = SPECIAL_CELLS[key];
     if (special === 'studio') {
-      // tower behind the studio + side buildings; studio itself is built in studio.js
-      addBuilding(cx, cz + 7.5, 28, 13, 70 + rnd() * 20, { kind: 1 });
-      addBuilding(cx - 11.5, cz - 7, 5, 14, 22, { kind: 0, noBoard: true });
-      addBuilding(cx + 11.5, cz - 7, 5, 14, 30, { kind: 2, noBoard: true });
+      // tower behind the studio + slim side towers; the studio itself is built in studio.js
+      addBuilding(cx, cz + 7.25, BW, 8.5, 70 + rnd() * 20, { kind: 1 });
+      addBuilding(cx - 10.25, cz - 5, 2.5, 13, 24, { kind: 0, noBoard: true, noSign: true });
+      addBuilding(cx + 10.25, cz - 5, 2.5, 13, 32, { kind: 2, noBoard: true, noSign: true });
+      continue;
+    }
+    if (special === 'printer') {
+      // a 12 m podium: the printer sits on its roof (level 2)
+      addBuilding(cx, cz, 14, 14, 12, { kind: 0, flat: true, noBoard: true, collideH: 12 });
+      neon.box(cx, 12, cz, 14.2, 0.25, 14.2, { top: false, color: [2.4, 1.2, 0.3] });
+      world.surfaces.push({ x0: cx - 7, x1: cx + 7, z0: cz - 7, z1: cz + 7, y: 12 });
       continue;
     }
     if (special) {
-      // small corner kiosks in some plazas for enclosure
-      if (['finch', 'printer', 'naturum', 'rainhub'].includes(special)) {
+      if (['naturum', 'rainhub'].includes(special)) {
         const corners = [[-1, -1], [1, -1], [-1, 1], [1, 1]].filter(() => rnd() < 0.5).slice(0, 2);
-        for (const [sx, sz] of corners) addBuilding(cx + sx * 10.5, cz + sz * 10.5, 7, 7, 7 + rnd() * 10, { flat: true, noBoard: true });
+        for (const [sx, sz] of corners) addBuilding(cx + sx * 9, cz + sz * 9, 5, 5, 7 + rnd() * 10, { flat: true, noBoard: true });
       }
       continue;
     }
     const pattern = rnd();
     const lots = [];
     const g = 1.6; // alley
-    if (pattern < 0.25) lots.push([cx, cz, 28, 28]);
+    const q = BH / 2;
+    if (pattern < 0.25) lots.push([cx, cz, BW, BW]);
     else if (pattern < 0.6) {
-      if (rnd() < 0.5) { lots.push([cx - 7 - g / 4, cz, 14 - g / 2, 28], [cx + 7 + g / 4, cz, 14 - g / 2, 28]); }
-      else { lots.push([cx, cz - 7 - g / 4, 28, 14 - g / 2], [cx, cz + 7 + g / 4, 28, 14 - g / 2]); }
+      if (rnd() < 0.5) { lots.push([cx - q - g / 4, cz, BH - g / 2, BW], [cx + q + g / 4, cz, BH - g / 2, BW]); }
+      else { lots.push([cx, cz - q - g / 4, BW, BH - g / 2], [cx, cz + q + g / 4, BW, BH - g / 2]); }
     } else {
-      for (const sx of [-1, 1]) for (const sz of [-1, 1]) lots.push([cx + sx * (7 + g / 4), cz + sz * (7 + g / 4), 14 - g / 2, 14 - g / 2]);
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) lots.push([cx + sx * (q + g / 4), cz + sz * (q + g / 4), BH - g / 2, BH - g / 2]);
     }
     for (const [x, z, w, d] of lots) {
-      const centreBoost = 1 - Math.hypot(cx, cz) / 160;
+      const centreBoost = 1 - Math.hypot(cx, cz) / 140;
       const h = 16 + Math.pow(rnd(), 1.4) * 70 * (0.6 + centreBoost) + (rnd() < 0.08 ? 60 : 0);
       addBuilding(x, z, w, d, h);
     }
   }
 
   // ---- perimeter megastructures (outside the playable area)
-  const P = 108;
-  for (let s = -140; s < 140; s += 18 + rnd() * 10) {
+  const P = 93;
+  for (let s = -125; s < 125; s += 18 + rnd() * 10) {
     const w = 14 + rnd() * 10;
-    // south / east / west walls of towers
     addBuilding(s, P + 12 + rnd() * 6, w, 22, 50 + rnd() * 110, { noCollide: true, noShop: rnd() < 0.5 });
     addBuilding(P + 12 + rnd() * 6, s, 22, w, 50 + rnd() * 110, { noCollide: true, noShop: rnd() < 0.5 });
     addBuilding(-P - 12 - rnd() * 6, s, 22, w, 50 + rnd() * 110, { noCollide: true, noShop: rnd() < 0.5 });
   }
   // the Sea Wall to the north
-  kinds[2].box(0, 0, -P - 30, 420, 190, 40, { color: [0.35, 0.33, 0.32], ou: 0.2 });
-  for (let k = 0; k < 7; k++) neon.box(0, 20 + k * 24, -P - 9.9, 420, 0.4, 0.2, { top: false, color: [2.2, 0.7, 0.25] });
+  kinds[2].box(0, 0, -P - 30, 400, 190, 40, { color: [0.35, 0.33, 0.32], ou: 0.2 });
+  for (let k = 0; k < 7; k++) neon.box(0, 20 + k * 24, -P - 9.9, 400, 0.4, 0.2, { top: false, color: [2.2, 0.7, 0.25] });
   // far skyline
   for (let k = 0; k < 70; k++) {
-    const a = rnd() * Math.PI * 2, r = 190 + rnd() * 170;
+    const a = rnd() * Math.PI * 2, r = 175 + rnd() * 170;
     const x = Math.cos(a) * r, z = Math.sin(a) * r;
-    if (z < -130 && Math.abs(x) < 210) continue; // behind the wall
+    if (z < -115 && Math.abs(x) < 200) continue; // behind the wall
     const w = 16 + rnd() * 30;
     kinds[(rnd() * 3) | 0].box(x, 0, z, w, 80 + rnd() * 260, w * (0.6 + rnd() * 0.8), { ou: rnd() * 4, color: [0.6, 0.6, 0.7] });
   }
@@ -263,15 +270,16 @@ export function buildCity(scene, world, renderer) {
 
   // ---- ground
   const { map, rough } = groundTextures();
-  map.repeat.set(10, 10); rough.repeat.set(10, 10);
+  map.repeat.set(12, 12); rough.repeat.set(12, 12);
   const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(400, 400),
+    new THREE.PlaneGeometry(408, 408),
     new THREE.MeshStandardMaterial({ map, roughnessMap: rough, roughness: 1, metalness: 0.5, envMapIntensity: 0.9, color: 0x9aa0ad })
   );
   ground.rotation.x = -Math.PI / 2;
   scene.add(ground);
   world.ground = ground;
 
+  buildStreetLife(scene, world, rnd);
   buildLamps(scene, world, rnd);
   buildSpinners(scene, world, rnd);
   buildRain(scene, world);
@@ -308,20 +316,21 @@ function shopTexture() {
 
 function buildLamps(scene, world, rnd) {
   const pts = [];
-  const lines = [-100, -60, -20, 20, 60, 100];
+  const lines = [-85, -51, -17, 17, 51, 85];
   for (const L of lines) {
-    for (let s = -100; s <= 100; s += 13) {
-      if (lines.some((q) => Math.abs(q - s) < 8)) continue;
-      pts.push([L + 7.5, s], [L - 7.5, s + 6], [s, L + 7.5], [s + 6, L - 7.5]);
+    for (let s = -85; s <= 85; s += 12) {
+      if (lines.some((q) => Math.abs(q - s) < 6.5)) continue;
+      pts.push([L + 3.9, s], [L - 3.9, s + 6], [s, L + 3.9], [s + 6, L - 3.9]);
     }
   }
-  const list = pts.filter(([x, z]) => Math.abs(x) <= 106 && Math.abs(z) <= 106);
-  const poleG = new THREE.BoxGeometry(0.16, 6, 0.16); poleG.translate(0, 3, 0);
-  const headG = new THREE.BoxGeometry(0.5, 0.18, 1.6); headG.translate(0, 6, 0);
+  // no lamps where the skyways land their stairs
+  const list = pts.filter(([x, z]) => Math.abs(x) <= 89 && Math.abs(z) <= 89 && !(Math.abs(Math.abs(x) - 17) < 5 && Math.abs(z) > 49 && Math.abs(z) < 64));
+  const poleG = new THREE.BoxGeometry(0.16, 6, 0.16); poleG.translate(0, 3.15, 0);
+  const headG = new THREE.BoxGeometry(0.5, 0.18, 1.6); headG.translate(0, 6.15, 0);
   const pole = new THREE.InstancedMesh(poleG, new THREE.MeshStandardMaterial({ color: 0x15161a, roughness: 0.6, metalness: 0.8 }), list.length);
   const head = new THREE.InstancedMesh(headG, new THREE.MeshBasicMaterial({ toneMapped: false }), list.length);
   const poolTex = radialTexture('rgba(255,255,255,0.55)', 'rgba(255,255,255,0)');
-  const poolG = new THREE.PlaneGeometry(9, 9); poolG.rotateX(-Math.PI / 2); poolG.translate(0, 0.03, 0);
+  const poolG = new THREE.PlaneGeometry(8, 8); poolG.rotateX(-Math.PI / 2); poolG.translate(0, 0.17, 0);
   const pool = new THREE.InstancedMesh(poolG, new THREE.MeshBasicMaterial({ map: poolTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }), list.length);
   const m = new THREE.Matrix4(), c = new THREE.Color();
   list.forEach(([x, z], i) => {
@@ -348,7 +357,7 @@ function buildSpinners(scene, world, rnd) {
   const n = QUALITY.spinners;
   const im = new THREE.InstancedMesh(geo, new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false }), n);
   const cars = [];
-  const lanes = [-60, -20, 20, 60];
+  const lanes = [-51, -17, 17, 51];
   for (let i = 0; i < n; i++) {
     cars.push({
       axis: rnd() < 0.5 ? 'x' : 'z', lane: lanes[(rnd() * 4) | 0] + (rnd() - 0.5) * 4,
@@ -358,7 +367,26 @@ function buildSpinners(scene, world, rnd) {
   }
   const m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), p = new THREE.Vector3(), sc = new THREE.Vector3(1, 1, 1);
   scene.add(im);
+  // ground-level hover traffic on the roads
+  const gn = QUALITY.low ? 6 : 12;
+  const gim = new THREE.InstancedMesh(geo, im.material, gn);
+  const gcars = [];
+  for (let i = 0; i < gn; i++) {
+    const dir = rnd() < 0.5 ? -1 : 1;
+    gcars.push({ axis: rnd() < 0.5 ? 'x' : 'z', lane: [-51, -17, 17, 51, -85, 85][(rnd() * 6) | 0] + dir * 1.75, s: rnd() * 180 - 90, v: dir * (7 + rnd() * 6), bob: rnd() * 6 });
+  }
+  scene.add(gim);
+  world.groundCars = gcars;
   world.updaters.push((t, dt) => {
+    gcars.forEach((c, i) => {
+      c.s += c.v * dt;
+      if (c.s > 95) c.s = -95; if (c.s < -95) c.s = 95;
+      const y = 1.25 + Math.sin(t * 2 + c.bob) * 0.08;
+      if (c.axis === 'x') { p.set(c.s, y, c.lane); e.set(0, c.v > 0 ? Math.PI / 2 : -Math.PI / 2, 0); }
+      else { p.set(c.lane, y, c.s); e.set(0, c.v > 0 ? 0 : Math.PI, 0); }
+      q.setFromEuler(e); m.compose(p, q, sc); gim.setMatrixAt(i, m);
+    });
+    gim.instanceMatrix.needsUpdate = true;
     cars.forEach((c, i) => {
       c.s += c.v * dt;
       if (c.s > 170) c.s = -170; if (c.s < -170) c.s = 170;
@@ -442,9 +470,9 @@ function buildDust(scene, world) {
 function buildSteam(scene, world, rnd) {
   const vents = [];
   for (let k = 0; k < 14; k++) {
-    const L = [-60, -20, 20, 60][(rnd() * 4) | 0];
-    const s = (rnd() - 0.5) * 190;
-    vents.push(rnd() < 0.5 ? [L + (rnd() - 0.5) * 6, s] : [s, L + (rnd() - 0.5) * 6]);
+    const L = [-51, -17, 17, 51][(rnd() * 4) | 0];
+    const s = (rnd() - 0.5) * 160;
+    vents.push(rnd() < 0.5 ? [L + (rnd() - 0.5) * 5, s] : [s, L + (rnd() - 0.5) * 5]);
   }
   const per = 22;
   const N = vents.length * per;
@@ -500,8 +528,8 @@ function buildJelly(scene, world) {
   scene.add(grp);
   world.updaters.push((t) => {
     bell.material.uniforms.uTime.value = t;
-    grp.position.x = Math.sin(t * 0.03) * 60;
-    grp.position.z = Math.cos(t * 0.021) * 50;
+    grp.position.x = Math.sin(t * 0.03) * 48;
+    grp.position.z = Math.cos(t * 0.021) * 40;
     grp.position.y = 62 + Math.sin(t * 0.4) * 3;
     let o = 0;
     for (let i = 0; i < T; i++) {

@@ -71,7 +71,7 @@ export class Ambience {
     o.start(t); o2.start(t); o.stop(t + 5.2); o2.stop(t + 5.2);
   }
 
-  setRain(v) { if (this.rainGain) this.rainGain.gain.setTargetAtTime(0.12 + v * 0.3, this.ctx.currentTime, 0.8); }
+  setRain(v, wet = 1) { if (this.rainGain) this.rainGain.gain.setTargetAtTime((0.12 + v * 0.3) * Math.max(0.08, wet), this.ctx.currentTime, 0.8); }
   setDuck(on) { if (this.ambBus) this.ambBus.gain.setTargetAtTime(on ? 0.22 : 1, this.ctx.currentTime, 0.6); }
   setMuted(m) { this.muted = m; if (this.master) this.master.gain.setTargetAtTime(m ? 0 : 0.9, this.ctx.currentTime, 0.2); }
 
@@ -83,6 +83,21 @@ export class Ambience {
       for (let i = 0; i < 800; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / 90);
       const s = ctx.createBufferSource(); s.buffer = b; const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2400 + Math.random() * 1200;
       const g = ctx.createGain(); g.gain.value = 0.5; s.connect(f).connect(g).connect(this.sfxBus); s.start(t);
+      return;
+    }
+    if (kind === 'win') {
+      // bright arpeggio over a sub drop
+      [0, 4, 7, 12, 16, 19, 24, 28].forEach((st, i) => {
+        const o = ctx.createOscillator(); o.type = i % 2 ? 'sawtooth' : 'square';
+        o.frequency.value = 220 * Math.pow(2, st / 12);
+        const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 2400;
+        const g = ctx.createGain(); const t0 = t + i * 0.11;
+        g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.07, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.9);
+        o.connect(f).connect(g).connect(this.sfxBus); o.start(t0); o.stop(t0 + 1);
+      });
+      const sub = ctx.createOscillator(); sub.frequency.setValueAtTime(110, t); sub.frequency.exponentialRampToValueAtTime(30, t + 2.5);
+      const sg = ctx.createGain(); sg.gain.setValueAtTime(0.3, t); sg.gain.exponentialRampToValueAtTime(0.0001, t + 2.6);
+      sub.connect(sg).connect(this.sfxBus); sub.start(t); sub.stop(t + 2.7);
       return;
     }
     if (kind === 'ui') {

@@ -4,7 +4,8 @@ import { buildCity, districtT } from './city.js';
 import { Player } from './player.js';
 import { Input } from './input.js';
 import { Anomalies } from './anomalies.js';
-import { Studio, STUDIO } from './studio.js';
+import { Studio, STUDIO, DESK_Z } from './studio.js';
+import { buildVertical } from './vertical.js';
 import { Jukebox } from './jukebox.js';
 import { Ambience } from './audio.js';
 import { createFX } from './fx.js';
@@ -40,8 +41,9 @@ async function boot() {
   scene.add(hemi);
   const moon = new THREE.DirectionalLight(0x8fb4ff, 0.35); moon.position.set(-40, 80, 30); scene.add(moon);
 
-  const world = { colliders: [], colliderCircles: [], interactables: [], updaters: [], buildingMeshes: [] };
+  const world = { colliders: [], colliderCircles: [], surfaces: [], interactables: [], updaters: [], buildingMeshes: [] };
   buildCity(scene, world, renderer);
+  buildVertical(scene, world);
 
   const ui = new UI();
   const ambience = new Ambience();
@@ -56,13 +58,68 @@ async function boot() {
       ui.setCount(n, anomalies.found);
       ui.showCard(d, n); state.card = d.id; this.cardOpen = d.id;
       if (n === 3) setTimeout(() => ui.toast('A beacon has lit up over the studio by the Sea Wall. Follow it on the radar.', 6500), 1800);
-      if (n === 9) setTimeout(() => ui.toast('All nine anomalies found. Now go and sit down at the workstation.', 6500), 1800);
+      if (n === 9) setTimeout(() => celebrate(), 1400);
       studio.setBeacon(n >= 3);
     },
     onLeave() { ui.hideCard(); state.card = null; this.cardOpen = null; },
     cardOpen: null,
   });
   $('card-close').onclick = () => { ui.hideCard(); anomalies.hooks.cardOpen = null; ambience.blip('ui'); };
+
+  // ---------- completion state (all nine found)
+  let complete = storage.get('shx-complete', false) && anomalies.count >= 9;
+  let clearSky = complete ? 1 : 0;       // 0 = rain, 1 = cleared after completion
+  let playTime = storage.get('shx-time', 0);
+
+  // open a project from its card (warn if the game isn't finished)
+  $('card-link').onclick = () => {
+    const d = ui.cardData; if (!d) return;
+    ambience.blip('ui');
+    if (complete) { window.open(d.link, '_blank', 'noopener'); return; }
+    $('leave-go').href = d.link;
+    $('leave').classList.remove('hidden'); input.enabled = false;
+  };
+  const closeLeave = () => { $('leave').classList.add('hidden'); input.enabled = player.mode === 'walk'; };
+  $('leave-stay').onclick = closeLeave;
+  $('leave-go').addEventListener('click', () => setTimeout(closeLeave, 50));
+
+  // 9/9: the city glitches out, then Simon says hi
+  function celebrate() {
+    complete = true; storage.set('shx-complete', true);
+    anomalies.flareAll();
+    document.body.classList.add('shake');
+    $('breach').classList.remove('hidden');
+    const colors = ['#ff4fa3', '#6af2ff', '#ffb347', '#8dff6a', '#d24dff'];
+    [0, 350, 700, 1100, 1500, 1900, 2300, 2700].forEach((ms, i) => setTimeout(() => {
+      fx.glitch(2.4 - i * 0.12); ui.flash(colors[i % colors.length]); ambience.blip(i % 2 ? 'ui' : 'find');
+    }, ms));
+    setTimeout(() => ambience.blip('win'), 400);
+    setTimeout(() => {
+      document.body.classList.remove('shake'); $('breach').classList.add('hidden');
+      const mins = Math.max(1, Math.round(playTime / 60));
+      const body = `Hi Simon!\n\nI just found all nine anomalies in your playground city on simonhildell.xyz. It took me about ${mins} minute${mins === 1 ? '' : 's'}.\n\nMy favourite one was: \n\n`;
+      $('complete-mail').href = `mailto:simon@hildell.com?subject=${encodeURIComponent('I found all nine anomalies')}&body=${encodeURIComponent(body)}`;
+      $('complete').classList.remove('hidden'); input.enabled = false; ui.hideCard();
+      ui.setCount(9, anomalies.found);
+    }, 3300);
+  }
+  const closeComplete = () => { $('complete').classList.add('hidden'); input.enabled = player.mode === 'walk'; };
+  $('complete-stay').onclick = () => { closeComplete(); ui.toast('The rain has stopped. Enjoy the city.', 4000); };
+  $('complete-mail').addEventListener('click', () => setTimeout(closeComplete, 50));
+
+  function playAgain() {
+    anomalies.reset();
+    complete = false; storage.set('shx-complete', false);
+    playTime = 0; storage.set('shx-time', 0);
+    ui.setCount(0, anomalies.found); ui.hideCard(); anomalies.hooks.cardOpen = null;
+    studio.setBeacon(false);
+    ['complete', 'help', 'leave'].forEach((id) => $(id).classList.add('hidden'));
+    if (desk.active) exitDesk();
+    input.enabled = true;
+    fx.glitch(1.5); ambience.blip('find');
+    ui.toast('The anomalies are back. So is the rain.', 4500);
+  }
+  $('complete-again').onclick = () => playAgain();
 
   const input = new Input(canvas);
   const player = new Player(scene, camera, world);
@@ -126,10 +183,12 @@ async function boot() {
   function exitDesk() {
     desk.active = false; studio.reset();
     player.mode = 'walk'; input.enabled = true; player.fig.visible = true; player.shadow.visible = true;
-    player.pos.set(0, 0, -86.5); player.yaw = Math.PI; player.pitch = 0.2; player.curDist = 2;
+    player.pos.set(0, STUDIO.y, DESK_Z - 3.4); player.yaw = Math.PI; player.pitch = 0.2; player.curDist = 2;
     $('desk-ui').classList.add('hidden'); $('hud').classList.remove('hidden');
+    $('desk-insta').classList.add('hidden'); $('desk-again').classList.add('hidden');
   }
   $('desk-back').onclick = exitDesk;
+  $('desk-again').onclick = () => playAgain();
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
   canvas.addEventListener('click', (e) => {
     if (!desk.active) return;
@@ -145,7 +204,7 @@ async function boot() {
   $('btn-sound').onclick = () => { muted = !muted; storage.set('shx-muted', muted); syncSound(); };
   $('btn-help').onclick = () => { $('help').classList.remove('hidden'); input.enabled = false; };
   $('help-close').onclick = () => { $('help').classList.add('hidden'); input.enabled = player.mode === 'walk'; };
-  $('help-reset').onclick = () => { storage.set('shx-found', []); location.reload(); };
+  $('help-reset').onclick = () => playAgain();
   $('act-btn').addEventListener('touchstart', (e) => { e.preventDefault(); input.pressInteract(); }, { passive: false });
   $('act-btn').onclick = () => input.pressInteract();
   $('jump-btn').addEventListener('touchstart', (e) => { e.preventDefault(); input.pressJump(); }, { passive: false });
@@ -212,7 +271,7 @@ async function boot() {
     player.update(dt, input, t);
     // keep the camera under the studio ceiling
     if (player.mode === 'walk' && player.pos.z < STUDIO.z1 && player.pos.z > STUDIO.z0 && Math.abs(player.pos.x) < STUDIO.x1) {
-      camera.position.y = Math.min(camera.position.y, STUDIO.h - 0.4);
+      camera.position.y = Math.min(camera.position.y, STUDIO.h + STUDIO.y - 0.4);
       camera.position.z = Math.max(camera.position.z, STUDIO.z0 - 1.5);
       camera.lookAt(player.pos.x, player.pos.y + 1.6, player.pos.z);
     }
@@ -222,22 +281,29 @@ async function boot() {
       camera.position.lerpVectors(desk.from.pos, desk.to.pos, k);
       camera.quaternion.slerpQuaternions(desk.from.quat, desk.to.quat, k);
       if (desk.t >= 1 && studio.state !== 'desk') studio.startTyping();
-      if (studio.complete && $('desk-open').classList.contains('hidden')) $('desk-open').classList.remove('hidden');
+      if (studio.complete && $('desk-open').classList.contains('hidden')) {
+        $('desk-open').classList.remove('hidden'); $('desk-insta').classList.remove('hidden');
+        $('desk-again').classList.toggle('hidden', !complete);
+      }
     }
 
     // district atmosphere follows the player
     const dT = districtT(player.pos.x);
     const wall = Math.max(0, Math.min(1, (-player.pos.z - 55) / 40));
     scene.fog.color.copy(fogWest).lerp(fogEast, dT).lerp(tmpC.set('#1a1030'), wall * 0.5);
-    scene.fog.density = lerp(0.017, 0.011, dT);
+    clearSky += ((complete ? 1 : 0) - clearSky) * Math.min(1, dt * 0.35);
+    const wet = 1 - clearSky;
+    scene.fog.density = lerp(0.017, 0.011, dT) * (1 - 0.35 * clearSky);
     world.sky.u.uBottom.value.copy(scene.fog.color);
     world.sky.u.uTop.value.copy(scene.fog.color).multiplyScalar(0.25);
     world.sky.mesh.position.copy(camera.position);
     hemi.color.set('#7a5a50').lerp(tmpC.set('#5a5aa0'), dT);
     fx.final.uniforms.uTint.value.setRGB(lerp(1.1, 0.94, dT), lerp(0.95, 1.0, dT), lerp(0.82, 1.1, dT));
-    world.rain.uTime.value = t; world.rain.uCam.value.copy(camera.position); world.rain.uAmount.value = lerp(0.12, 1, dT);
-    world.dust.uTime.value = t; world.dust.uCam.value.copy(camera.position); world.dust.uAmount.value = 1 - dT;
-    if (started && frames % 30 === 0) ambience.setRain(dT);
+    world.rain.uTime.value = t; world.rain.uCam.value.copy(camera.position); world.rain.uAmount.value = lerp(0.12, 1, dT) * wet;
+    world.dust.uTime.value = t; world.dust.uCam.value.copy(camera.position); world.dust.uAmount.value = (1 - dT) * (0.35 + 0.65 * wet);
+    world.ripples.uTime.value = t; world.ripples.uCam.value.copy(camera.position); world.ripples.uAmount.value = lerp(0.2, 1, dT) * wet;
+    if (started && frames % 30 === 0) ambience.setRain(dT * wet, wet);
+    if (started && player.mode === 'walk') { playTime += dt; if (frames % 300 === 0) storage.set('shx-time', Math.round(playTime)); }
 
     for (const u of world.updaters) u(t, dt);
     anomalies.musicLevel = jb.level(t);
@@ -250,7 +316,7 @@ async function boot() {
       let best = null, bd = 1e9;
       for (const it of world.interactables) {
         if (it.enabled && !it.enabled()) continue;
-        const d = Math.hypot(player.pos.x - it.x, player.pos.z - it.z);
+        const d = Math.hypot(player.pos.x - it.x, player.pos.z - it.z) + (Math.abs(player.pos.y - (it.y ?? 0.15)) > 2 ? 99 : 0);
         if (d < it.r && d < bd) { bd = d; best = it; }
       }
       ui.prompt(best ? best.label : null);
@@ -273,9 +339,9 @@ async function boot() {
     $('hud').classList.remove('hidden');
     fx.glitch(0.8);
     const n = anomalies.count;
-    setTimeout(() => ui.toast(n ? `Welcome back. ${n}/9 anomalies found so far.` : 'Nine anomalies are hiding in the city. Look for the light pillars.', 5000), 900);
+    setTimeout(() => ui.toast(complete ? 'Welcome back. You found all nine, the rain is taking a break.' : n ? `Welcome back. ${n}/9 anomalies found so far.` : 'Nine anomalies are hiding in the city. Some of them are up on the skyways.', 5000), 900);
   };
-  window.__shx = { desk, player, anomalies, studio, jb, camera, renderer, scene, world, fx }; // debug handle
+  window.__shx = { celebrate, playAgain, desk, player, anomalies, studio, jb, camera, renderer, scene, world, fx }; // debug handle
 }
 
 boot();

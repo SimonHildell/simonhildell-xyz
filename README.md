@@ -1,4 +1,4 @@
-# simonhildell.xyz — a playground
+# simonhildell.xyz · a playground
 
 An explorable cyberpunk city built with three.js. You walk around, find nine anomalies built from my projects, and finish by finding my workstation. The curated portfolio lives at [simonhildell.com](https://www.simonhildell.com).
 
@@ -18,14 +18,16 @@ python3 -m http.server 8000
 | File | What it holds |
 | --- | --- |
 | `js/tracks.js` | The jukebox playlist as Spotify track IDs. Add, remove or reorder lines here. |
-| `js/anomalies.js` | `ANOMALY_DATA` holds each card's title, text, image and colour. `BUILDERS` holds the 3D models. |
+| `js/anomalies.js` | `ANOMALY_DATA` holds each card's title, text, image, colour and link to simonhildell.com. `BUILDERS` holds the 3D models. |
 | `js/studio.js` | The workstation: the desk, 27" screen, laptop on its stand, and the typed text and link. |
 | `js/city.js` | The procedural city: blocks, signs, billboards, spinners, rain, the Sea Wall. |
+| `js/vertical.js` | Skyways, stairs, the Finch deck and the bridge up to the printer podium (levels 1 and 2). |
+| `js/streetlife.js` | Raised sidewalks, vending machines, bollards, pedestrians with umbrellas, cables, rain ripples. |
 | `js/main.js` | Wires it all together: loop, district atmosphere, desk camera, UI. |
 | `img/` | Card images copied from simonhildell.com, plus the social preview `og.jpg`. |
 | `CNAME` | The custom domain for GitHub Pages. |
 
-Progress (found anomalies) is saved in the visitor's browser. The **?** menu has a reset button.
+Progress (found anomalies) is saved in the visitor's browser. Finding all nine stops the rain and offers an email to Simon; **Play again** (in the 9/9 screen, at the desk or in the **?** menu) resets it.
 
 ## Deploy (GitHub Pages)
 

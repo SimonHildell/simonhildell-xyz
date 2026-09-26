@@ -38,11 +38,23 @@ export const storage = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } },
 };
 
-// City grid: streets on lines x,z = 20 + 40k, cells centred on multiples of 40.
+// City grid: streets on lines x,z = 17 + 34k, cells centred on multiples of 34.
 export const GRID = {
-  cell: 40,
-  street: 12,
-  half: 100,           // playable half-extent (street centreline of the perimeter)
-  bound: 104,          // player clamp
-  cellCenter: (i) => -80 + 40 * i,
+  cell: 34,
+  road: 3.5,           // half road width
+  slab: 13.5,          // half size of the raised sidewalk/block slab
+  block: 11.5,         // half size of the buildable block
+  half: 85,            // perimeter street centreline
+  bound: 88,           // player clamp
+  kerb: 0.15,          // sidewalk height
+  cellCenter: (i) => -68 + 34 * i,
 };
+
+// Walkable surfaces: flat {x0,x1,z0,z1,y} or ramps {..., axis:'x'|'z', a, b, ya, yb}
+export function surfaceHeight(s, x, z) {
+  if (x < s.x0 || x > s.x1 || z < s.z0 || z > s.z1) return -Infinity;
+  if (s.axis == null) return s.y;
+  const v = s.axis === 'z' ? z : x;
+  const t = clamp((v - s.a) / (s.b - s.a), 0, 1);
+  return s.ya + (s.yb - s.ya) * t;
+}

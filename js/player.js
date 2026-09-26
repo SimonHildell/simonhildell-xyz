@@ -1,14 +1,14 @@
 import * as THREE from 'three';
-import { clamp, damp, GRID, IS_TOUCH } from './util.js';
+import { clamp, damp, GRID, IS_TOUCH, surfaceHeight } from './util.js';
 
 const R = 0.42; // body radius
 
 export class Player {
   constructor(scene, camera, world) {
     this.scene = scene; this.camera = camera; this.world = world;
-    this.pos = new THREE.Vector3(0, 0, 97);
+    this.pos = new THREE.Vector3(0, 0, 83);
     this.vel = new THREE.Vector3();
-    this.vy = 0;
+    this.vy = 0; this.grounded = true;
     this.heading = Math.PI; // facing -z (north)
     this.yaw = 0; this.pitch = 0.18;
     this.camDist = IS_TOUCH ? 6.2 : 5.4;
@@ -73,6 +73,8 @@ export class Player {
     for (let it = 0; it < 2; it++) {
       for (const c of w.colliders) {
         if (c.disabled) continue;
+        const y0 = c.y0 || 0;
+        if (p.y + 1.7 < y0 || p.y > y0 + (c.h ?? 999) - 0.3) continue;
         const cx = clamp(p.x, c.x0, c.x1), cz = clamp(p.z, c.z0, c.z1);
         const dx = p.x - cx, dz = p.z - cz;
         const d2 = dx * dx + dz * dz;
@@ -89,6 +91,8 @@ export class Player {
         }
       }
       for (const c of w.colliderCircles) {
+        const y0 = c.y0 || 0;
+        if (p.y + 1.7 < y0 || p.y > y0 + (c.h ?? 999) - 0.3) continue;
         const dx = p.x - c.x, dz = p.z - c.z, rr = c.r + R;
         const d2 = dx * dx + dz * dz;
         if (d2 < rr * rr && d2 > 1e-8) { const d = Math.sqrt(d2); p.x = c.x + (dx / d) * rr; p.z = c.z + (dz / d) * rr; }
@@ -101,7 +105,33 @@ export class Player {
   pointBlocked(x, y, z) {
     for (const c of this.world.colliders) {
       if (c.disabled || c.noCam) continue;
-      if (x > c.x0 - 0.2 && x < c.x1 + 0.2 && z > c.z0 - 0.2 && z < c.z1 + 0.2 && y < (c.h ?? 999)) return true;
+      const y0 = c.y0 || 0;
+      if (x > c.x0 - 0.2 && x < c.x1 + 0.2 && z > c.z0 - 0.2 && z < c.z1 + 0.2 && y > y0 && y < y0 + (c.h ?? 999)) return true;
+    }
+    // decks and stairs overhead
+    for (const s of this.world.surfaces) {
+      if (s.kerb) continue;
+      const h = surfaceHeight(s, x, z);
+      if (h > 1 && y > h - 0.7 && y < h + 0.15) return true;
+    }
+    return false;
+  }
+
+  // highest walkable surface under (x,z) that can be stepped onto from height y
+  groundAt(x, z, y) {
+    let g = 0;
+    for (const s of this.world.surfaces) {
+      const h = surfaceHeight(s, x, z);
+      if (h <= y + 0.55 && h > g) g = h;
+    }
+    return g;
+  }
+
+  // a surface between knee and head height blocks walking (deck edges, stair sides)
+  headBlocked(x, z, y) {
+    for (const s of this.world.surfaces) {
+      const h = surfaceHeight(s, x, z);
+      if (h > y + 0.55 && h < y + 1.9) return true;
     }
     return false;
   }
@@ -124,11 +154,25 @@ export class Player {
     const targetVX = mx * speed, targetVZ = mz * speed;
     this.vel.x = damp(this.vel.x, targetVX, 10, dt);
     this.vel.z = damp(this.vel.z, targetVZ, 10, dt);
+    const ox = this.pos.x, oz = this.pos.z;
     this.pos.x += this.vel.x * dt; this.pos.z += this.vel.z * dt;
-    if (input.consumeJump() && this.pos.y <= 0.001) this.vy = 5.2;
-    this.vy -= 14 * dt; this.pos.y += this.vy * dt;
-    if (this.pos.y < 0) { this.pos.y = 0; this.vy = 0; }
+    if (this.headBlocked(this.pos.x, this.pos.z, this.pos.y)) {
+      // slide along whichever axis is free
+      if (!this.headBlocked(this.pos.x, oz, this.pos.y)) this.pos.z = oz;
+      else if (!this.headBlocked(ox, this.pos.z, this.pos.y)) this.pos.x = ox;
+      else { this.pos.x = ox; this.pos.z = oz; }
+    }
     this.collide(this.pos);
+    const ground = this.groundAt(this.pos.x, this.pos.z, this.pos.y);
+    if (input.consumeJump() && this.grounded) { this.vy = 5.2; this.grounded = false; }
+    if (this.grounded && this.vy <= 0 && this.pos.y - ground < 0.45) {
+      this.pos.y = ground; this.vy = 0;   // stick to stairs and kerbs
+    } else {
+      this.vy -= 14 * dt; this.pos.y += this.vy * dt;
+      if (this.pos.y <= ground) { this.pos.y = ground; this.vy = 0; this.grounded = true; }
+      else this.grounded = false;
+    }
+    if (this.pos.y <= ground + 0.001) this.grounded = true;
 
     // figure orientation + gait
     const sp = Math.hypot(this.vel.x, this.vel.z);
@@ -144,7 +188,7 @@ export class Player {
     this.tail.rotation.x = -0.15 - Math.min(0.7, sp * 0.06) + Math.sin(t * 7) * 0.03 * sp / 5;
     this.fig.position.set(this.pos.x, this.pos.y + Math.abs(Math.cos(this.walkPhase)) * 0.05 * Math.min(1, sp / 3), this.pos.z);
     this.fig.rotation.y = this.heading;
-    this.shadow.position.set(this.pos.x, 0.02, this.pos.z);
+    this.shadow.position.set(this.pos.x, this.pos.y + 0.02, this.pos.z);
     this.light.position.set(this.pos.x, this.pos.y + 3, this.pos.z + 0.5);
 
     if (this.mode === 'walk') this.updateCamera(dt);
@@ -163,7 +207,8 @@ export class Player {
     }
     this.curDist = damp(this.curDist ?? dist, dist, dist < (this.curDist ?? dist) ? 25 : 4, dt);
     const cam = this.camera;
-    cam.position.set(tgt.x + dir.x * this.curDist, Math.max(0.35, tgt.y + dir.y * this.curDist), tgt.z + dir.z * this.curDist);
+    const cx = tgt.x + dir.x * this.curDist, cz = tgt.z + dir.z * this.curDist;
+    cam.position.set(cx, Math.max(this.groundAt(cx, cz, tgt.y) + 0.35, tgt.y + dir.y * this.curDist), cz);
     cam.lookAt(tgt.x, tgt.y + 0.2, tgt.z);
   }
 }

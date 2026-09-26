@@ -1,4 +1,4 @@
-// Simon's playlist "Works insta" — edit freely. Format: [spotify track id, title, artist]
+// Simon's playlist "Works insta". Edit freely. Format: [spotify track id, title, artist]
 export const PLAYLIST_URL = 'https://open.spotify.com/playlist/4R5kN2vhmLXC08O5f17cBS';
 export const TRACKS = [
   ['6EUs3FH5StArwbc07i3OYG', 'Poor Leno', 'Röyksopp'],

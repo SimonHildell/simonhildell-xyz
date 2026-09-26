@@ -71,73 +71,87 @@ export function windowTexture(kind, seed) {
   return tex(c, { repeat: true, aniso: 8 });
 }
 
-// Ground tile: 40 m x 40 m, roads cross through the tile centre.
+// Road tile: 34 m x 34 m, roads cross through the tile centre (blocks are covered by raised slabs).
 export function groundTextures() {
-  const S = 1024;
+  const S = 1024, T = 34, RH = 3.5;
   const [c, g] = canvas(S, S);
   const [rc, rg] = canvas(S, S); // roughness (G channel)
   const rnd = mulberry32(7);
-  const m = S / 40; // px per metre
-  // base paving
-  g.fillStyle = '#0d0f14'; g.fillRect(0, 0, S, S);
-  // paving slabs on blocks
-  g.strokeStyle = 'rgba(255,255,255,0.035)'; g.lineWidth = 2;
-  for (let i = 0; i < 40; i += 2) {
-    g.beginPath(); g.moveTo(i * m, 0); g.lineTo(i * m, S); g.stroke();
-    g.beginPath(); g.moveTo(0, i * m); g.lineTo(S, i * m); g.stroke();
-  }
-  const r0 = (20 - 6) * m, r1 = (20 + 6) * m;
-  // sidewalks
-  g.fillStyle = '#15171d';
-  g.fillRect(r0 - 2.5 * m, 0, r1 - r0 + 5 * m, S);
-  g.fillRect(0, r0 - 2.5 * m, S, r1 - r0 + 5 * m);
-  // asphalt
-  g.fillStyle = '#07080b';
-  g.fillRect(r0, 0, r1 - r0, S);
-  g.fillRect(0, r0, S, r1 - r0);
-  // curbs
-  g.fillStyle = '#2a2c33';
-  [r0, r1].forEach((x) => { g.fillRect(x - 3, 0, 6, S); g.fillRect(0, x - 3, S, 6); });
-  g.fillStyle = '#07080b';
-  g.fillRect(r0, r0, r1 - r0, r1 - r0);
+  const m = S / T;
+  g.fillStyle = '#08090c'; g.fillRect(0, 0, S, S);
+  const r0 = (T / 2 - RH) * m, r1 = (T / 2 + RH) * m;
+  // asphalt patches
+  for (let i = 0; i < 60; i++) { g.fillStyle = `rgba(${20 + rnd() * 10},${20 + rnd() * 10},${26 + rnd() * 10},0.5)`; const w = 20 + rnd() * 120; g.fillRect(rnd() * S, rnd() * S, w, w * (0.3 + rnd())); }
   // lane dashes
-  g.fillStyle = 'rgba(255,190,90,0.55)';
+  g.fillStyle = 'rgba(255,190,90,0.6)';
   for (let y = 0; y < S; y += 3 * m) {
     if (y > r0 - m && y < r1 + m) continue;
     g.fillRect(S / 2 - 3, y, 6, 1.5 * m);
     g.fillRect(y, S / 2 - 3, 1.5 * m, 6);
   }
+  // edge lines
+  g.fillStyle = 'rgba(230,235,255,0.25)';
+  [r0 + 0.4 * m, r1 - 0.4 * m].forEach((x) => { g.fillRect(x - 2, 0, 4, S); g.fillRect(0, x - 2, S, 4); });
+  g.fillStyle = '#08090c'; g.fillRect(r0, r0, r1 - r0, r1 - r0);
   // crosswalk stripes
-  g.fillStyle = 'rgba(220,230,255,0.28)';
-  for (let k = 0; k < 10; k++) {
-    const o = r0 + (k + 0.5) * ((r1 - r0) / 10);
-    g.fillRect(o - 8, r0 - 3.2 * m, 16, 2.4 * m);
-    g.fillRect(o - 8, r1 + 0.8 * m, 16, 2.4 * m);
-    g.fillRect(r0 - 3.2 * m, o - 8, 2.4 * m, 16);
-    g.fillRect(r1 + 0.8 * m, o - 8, 2.4 * m, 16);
+  g.fillStyle = 'rgba(220,230,255,0.32)';
+  for (let k = 0; k < 8; k++) {
+    const o = r0 + (k + 0.5) * ((r1 - r0) / 8);
+    g.fillRect(o - 9, r0 - 3.0 * m, 18, 2.4 * m);
+    g.fillRect(o - 9, r1 + 0.6 * m, 18, 2.4 * m);
+    g.fillRect(r0 - 3.0 * m, o - 9, 2.4 * m, 18);
+    g.fillRect(r1 + 0.6 * m, o - 9, 2.4 * m, 18);
   }
-  // grime
-  for (let i = 0; i < 2500; i++) {
-    g.fillStyle = `rgba(0,0,0,${rnd() * 0.25})`;
-    g.fillRect(rnd() * S, rnd() * S, rnd() * 20, rnd() * 20);
-  }
-  // roughness: mostly rough, puddles smooth
-  rg.fillStyle = 'rgb(0,150,0)'; rg.fillRect(0, 0, S, S);
-  for (let i = 0; i < 70; i++) {
-    const x = rnd() * S, y = rnd() * S, r = 20 + rnd() * 110;
+  // manholes + drains
+  for (let i = 0; i < 4; i++) { const x = S / 2 + (rnd() - 0.5) * (r1 - r0) * 0.6, y = rnd() * S; g.strokeStyle = 'rgba(120,120,130,0.4)'; g.lineWidth = 3; g.beginPath(); g.arc(x, y, 0.4 * m, 0, 7); g.stroke(); }
+  for (let i = 0; i < 3000; i++) { g.fillStyle = `rgba(0,0,0,${rnd() * 0.3})`; g.fillRect(rnd() * S, rnd() * S, rnd() * 16, rnd() * 16); }
+  // roughness: wet road, puddles glassy
+  rg.fillStyle = 'rgb(0,90,0)'; rg.fillRect(0, 0, S, S);
+  for (let i = 0; i < 80; i++) {
+    const x = rnd() * S, y = rnd() * S, r = 20 + rnd() * 90;
     const grd = rg.createRadialGradient(x, y, 0, x, y, r);
-    grd.addColorStop(0, 'rgba(0,10,0,1)');
-    grd.addColorStop(0.7, 'rgba(0,30,0,0.8)');
-    grd.addColorStop(1, 'rgba(0,150,0,0)');
-    rg.fillStyle = grd;
-    rg.beginPath(); rg.ellipse(x, y, r, r * (0.4 + rnd() * 0.6), rnd() * 3, 0, Math.PI * 2); rg.fill();
+    grd.addColorStop(0, 'rgba(0,5,0,1)'); grd.addColorStop(0.7, 'rgba(0,25,0,0.8)'); grd.addColorStop(1, 'rgba(0,90,0,0)');
+    rg.fillStyle = grd; rg.beginPath(); rg.ellipse(x, y, r, r * (0.4 + rnd() * 0.6), rnd() * 3, 0, Math.PI * 2); rg.fill();
   }
-  // road is wetter overall
-  rg.fillStyle = 'rgba(0,60,0,0.6)';
-  rg.fillRect(r0, 0, r1 - r0, S); rg.fillRect(0, r0, S, r1 - r0);
   const map = tex(c, { repeat: true, aniso: 8 });
   const rough = tex(rc, { repeat: true, srgb: false, aniso: 8 });
   return { map, rough };
+}
+
+// Raised block slab: paving with a sidewalk band + kerb stones along the edge. Tile = one slab (27 m).
+export function slabTextures() {
+  const S = 1024, T = 27;
+  const m = S / T;
+  const [c, g] = canvas(S, S);
+  const [rc, rg] = canvas(S, S);
+  const rnd = mulberry32(12);
+  g.fillStyle = '#14161c'; g.fillRect(0, 0, S, S);
+  // inner plaza paving (large slabs)
+  g.strokeStyle = 'rgba(255,255,255,0.05)'; g.lineWidth = 2;
+  for (let i = 0; i <= T; i += 1.5) { g.beginPath(); g.moveTo(i * m, 0); g.lineTo(i * m, S); g.stroke(); g.beginPath(); g.moveTo(0, i * m); g.lineTo(S, i * m); g.stroke(); }
+  // sidewalk band (2 m) with small tiles
+  const b = 2 * m;
+  g.fillStyle = '#1c1e25';
+  g.fillRect(0, 0, S, b); g.fillRect(0, S - b, S, b); g.fillRect(0, 0, b, S); g.fillRect(S - b, 0, b, S);
+  g.strokeStyle = 'rgba(255,255,255,0.06)'; g.lineWidth = 1;
+  for (let i = 0; i < S; i += 0.5 * m) {
+    g.beginPath(); g.moveTo(i, 0); g.lineTo(i, b); g.moveTo(i, S - b); g.lineTo(i, S); g.moveTo(0, i); g.lineTo(b, i); g.moveTo(S - b, i); g.lineTo(S, i); g.stroke();
+  }
+  // tactile strip + kerb stones
+  g.fillStyle = 'rgba(255,190,80,0.35)';
+  [[0.35 * m, 0.25 * m]].forEach(([o, w]) => { g.fillRect(o, o, S - 2 * o, w); g.fillRect(o, S - o - w, S - 2 * o, w); g.fillRect(o, o, w, S - 2 * o); g.fillRect(S - o - w, o, w, S - 2 * o); });
+  g.fillStyle = '#34363e';
+  g.fillRect(0, 0, S, 0.18 * m); g.fillRect(0, S - 0.18 * m, S, 0.18 * m); g.fillRect(0, 0, 0.18 * m, S); g.fillRect(S - 0.18 * m, 0, 0.18 * m, S);
+  for (let i = 0; i < 1800; i++) { g.fillStyle = `rgba(0,0,0,${rnd() * 0.25})`; g.fillRect(rnd() * S, rnd() * S, rnd() * 14, rnd() * 14); }
+  for (let i = 0; i < 40; i++) { g.fillStyle = `rgba(255,255,255,${rnd() * 0.03})`; g.fillRect(rnd() * S, rnd() * S, 1.5 * m, 1.5 * m); }
+  rg.fillStyle = 'rgb(0,150,0)'; rg.fillRect(0, 0, S, S);
+  for (let i = 0; i < 40; i++) {
+    const x = rnd() * S, y = rnd() * S, r = 15 + rnd() * 60;
+    const grd = rg.createRadialGradient(x, y, 0, x, y, r);
+    grd.addColorStop(0, 'rgba(0,10,0,1)'); grd.addColorStop(1, 'rgba(0,150,0,0)');
+    rg.fillStyle = grd; rg.beginPath(); rg.ellipse(x, y, r, r * 0.6, rnd() * 3, 0, 7); rg.fill();
+  }
+  return { map: tex(c, { aniso: 8 }), rough: tex(rc, { srgb: false, aniso: 8 }) };
 }
 
 // Neon sign with glowing text

@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>simonhildell.xyz — a playground</title>
+  <title>simonhildell.xyz · a playground</title>
   <meta name="description" content="A playground city by Simon Hildell. Walk the rain-soaked streets, find the anomalies, find the workstation." />
   <meta name="theme-color" content="#07080c" />
-  <meta property="og:title" content="simonhildell.xyz — a playground" />
+  <meta property="og:title" content="simonhildell.xyz · a playground" />
   <meta property="og:description" content="Walk a neon megacity, find anomalies built from Simon Hildell's projects, and find his workstation." />
   <meta property="og:image" content="https://www.simonhildell.xyz/img/og.jpg" />
   <link rel="icon" href="img/favicon.svg" type="image/svg+xml" />
@@ -74,6 +74,39 @@
     <div id="card-img-wrap"><img id="card-img" alt="" /></div>
     <p id="card-text"></p>
     <div id="card-credit"></div>
+    <div id="card-actions">
+      <button id="card-link">OPEN PROJECT ↗</button>
+      <div id="card-note"></div>
+    </div>
+  </div>
+
+  <!-- leaving mid-game -->
+  <div id="leave" class="modal hidden" role="dialog">
+    <div class="modal-inner">
+      <div class="modal-kicker">HOLD ON</div>
+      <p>You haven't finished the game yet. The project opens in a new tab, and your progress stays saved here.</p>
+      <div class="modal-btns">
+        <a id="leave-go" target="_blank" rel="noopener">OPEN ANYWAY ↗</a>
+        <button id="leave-stay">KEEP PLAYING</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9/9 -->
+  <div id="breach" class="hidden"><div class="breach-text" data-text="SIMULATION BREACHED">SIMULATION BREACHED</div></div>
+  <div id="complete" class="modal hidden" role="dialog">
+    <div class="modal-inner">
+      <div class="modal-kicker">9/9 · ALL ANOMALIES FOUND</div>
+      <h2>You found all nine.</h2>
+      <p>Okay, I did not expect anyone to actually do this. You now know my city better than most people know my portfolio.</p>
+      <p>Send me a mail and tell me you made it, I read everything. The rain has stopped, so go run around a bit. And if you haven't found my desk yet, it's by the Sea Wall.</p>
+      <p class="sig">/ Simon</p>
+      <div class="modal-btns">
+        <a id="complete-mail" href="mailto:simon@hildell.com">EMAIL SIMON</a>
+        <button id="complete-stay">KEEP EXPLORING</button>
+        <button id="complete-again">PLAY AGAIN</button>
+      </div>
+    </div>
   </div>
 
   <!-- jukebox -->
@@ -99,8 +132,12 @@
 
   <!-- desk -->
   <div id="desk-ui" class="hidden">
-    <a id="desk-open" class="hidden" href="https://www.simonhildell.com" target="_blank" rel="noopener">OPEN SIMONHILDELL.COM ↗</a>
-    <button id="desk-back">BACK TO THE CITY</button>
+    <div class="desk-row">
+      <a id="desk-open" class="hidden" href="https://www.simonhildell.com" target="_blank" rel="noopener">OPEN SIMONHILDELL.COM ↗</a>
+      <button id="desk-back">BACK TO THE CITY</button>
+      <button id="desk-again" class="hidden">PLAY AGAIN</button>
+    </div>
+    <a id="desk-insta" class="hidden" href="https://www.instagram.com/simonhildellworks/" target="_blank" rel="noopener">instagram · @simonhildellworks</a>
   </div>
 
   <!-- help -->
@@ -108,10 +145,10 @@
     <div class="help-inner">
       <h3>HOW TO PLAY</h3>
       <p>Walk the city and find the <b>9 anomalies</b>. Look for the light pillars and the flickering glyphs. The radar shows nearby signals.</p>
-      <p>When three have been found, a beacon lights up over the <b>studio</b>. Find the workstation to finish.</p>
+      <p>Some are up on the <b>skyways</b>: find the stairs. When three have been found, a beacon lights up over the <b>studio</b>. Find the workstation to finish.</p>
       <div class="controls desktop-only"><div><kbd>WASD</kbd> move · <kbd>SHIFT</kbd> run · <kbd>SPACE</kbd> jump · <kbd>DRAG</kbd> look · <kbd>E</kbd> interact · <kbd>M</kbd> jukebox</div></div>
       <div class="controls touch-only"><div>Left thumb move · right thumb look</div></div>
-      <button id="help-reset">RESET PROGRESS</button>
+      <button id="help-reset">PLAY AGAIN</button>
       <button id="help-close">CLOSE</button>
     </div>
   </div>

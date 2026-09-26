@@ -3,14 +3,15 @@ import { signTexture } from './textures.js';
 import { buildPavilion } from './anomalies.js';
 
 // The finale: Simon's workstation inside a small studio at the foot of the Sea Wall.
-export const STUDIO = { x0: -8, x1: 8, z0: -94, z1: -81.5, h: 4.6 };
-const DESK_Z = -82.4;
+export const STUDIO = { x0: -8, x1: 8, z0: -79.5, z1: -67, h: 4.6, y: 0.15 };
+export const DESK_Z = -67.9;
 const LINK = 'https://www.simonhildell.com';
 
 export class Studio {
   constructor(scene, world, hooks) {
     this.scene = scene; this.world = world; this.hooks = hooks;
     this.group = new THREE.Group();
+    this.group.position.y = STUDIO.y;
     scene.add(this.group);
     this.state = 'idle';
     this.typeT = 0; this.line1 = 'this is just a playground'; this.line2 = '→ simonhildell.com';
@@ -214,10 +215,10 @@ export class Studio {
       // landscape: frame the monitor and the laptop on its stand (viewer's right = -x)
       const span = 1.55, cx = -0.2;
       const d = Math.max((span / 0.92 / 2) / Math.tan(hf / 2), (PH / 0.5 / 2) / Math.tan(vf / 2));
-      return { pos: new THREE.Vector3(cx * 0.8, py + 0.06, pz - d), look: new THREE.Vector3(cx, py - 0.04, pz) };
+      return { pos: new THREE.Vector3(cx * 0.8, py + 0.06 + STUDIO.y, pz - d), look: new THREE.Vector3(cx, py - 0.04 + STUDIO.y, pz) };
     }
     const d = Math.max((PW / 0.86 / 2) / Math.tan(hf / 2), (PH / 0.62 / 2) / Math.tan(vf / 2));
-    return { pos: new THREE.Vector3(0.0, py + 0.02, pz - d), look: new THREE.Vector3(0, py, pz) };
+    return { pos: new THREE.Vector3(0.0, py + 0.02 + STUDIO.y, pz - d), look: new THREE.Vector3(0, py + STUDIO.y, pz) };
   }
 
   linkHit(uv) {

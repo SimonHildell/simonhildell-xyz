@@ -9,11 +9,11 @@ export class Jukebox {
     this.scene = scene; this.world = world; this.hooks = hooks;
     this.playing = false; this.current = -1; this.shuffle = storage.get('shx-shuffle', true);
     this.controller = null; this.apiState = 'none';
-    const base = new THREE.Vector3(-8.5, 0, -9.5); // plaza (0,0) local corner
+    const base = new THREE.Vector3(-7.5, 0.15, -7.8); // plaza (0,0) local corner
     this.buildStall(base);
-    this.buildMachine(new THREE.Vector3(-3.2, 0, -12.3));
+    this.buildMachine(new THREE.Vector3(-2.6, 0.15, -10.2));
     world.interactables.push({
-      id: 'jukebox', x: -3.2, z: -11, r: 2.6, label: 'Open the jukebox',
+      id: 'jukebox', x: -2.6, z: -9, r: 2.6, label: 'Open the jukebox',
       action: () => this.hooks.openUI(),
       enabled: () => true,
     });
@@ -152,7 +152,7 @@ export class Jukebox {
   }
 
   update(t, player) {
-    const vis = !player || Math.hypot(player.pos.x + 5, player.pos.z + 10) < 110;
+    const vis = !player || Math.hypot(player.pos.x + 5, player.pos.z + 9) < 100;
     this.machine.visible = this.stall.visible = vis;
     if (!vis) return;
     const lv = this.level(t);
