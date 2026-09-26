@@ -324,7 +324,7 @@ function buildLamps(scene, world, rnd) {
     }
   }
   // no lamps where the skyways land their stairs
-  const list = pts.filter(([x, z]) => Math.abs(x) <= 89 && Math.abs(z) <= 89 && !(Math.abs(Math.abs(x) - 17) < 5 && Math.abs(z) > 49 && Math.abs(z) < 64));
+  const list = pts.filter(([x, z]) => Math.abs(x) <= 89 && Math.abs(z) <= 89 && !(Math.abs(Math.abs(x) - 17) < 5 && Math.abs(z) > 49 && Math.abs(z) < 64) && !(x > -23 && x < -18 && z > -36 && z < -10));
   const poleG = new THREE.BoxGeometry(0.16, 6, 0.16); poleG.translate(0, 3.15, 0);
   const headG = new THREE.BoxGeometry(0.5, 0.18, 1.6); headG.translate(0, 6.15, 0);
   const pole = new THREE.InstancedMesh(poleG, new THREE.MeshStandardMaterial({ color: 0x15161a, roughness: 0.6, metalness: 0.8 }), list.length);
@@ -342,7 +342,7 @@ function buildLamps(scene, world, rnd) {
     pool.setColorAt(i, c.clone().multiplyScalar(0.55));
   });
   scene.add(pole, head, pool);
-  world.colliderCircles.push(...list.map(([x, z]) => ({ x, z, r: 0.25 })));
+  world.colliderCircles.push(...list.map(([x, z]) => ({ x, z, r: 0.25, h: 6.3 })));
 }
 
 function buildSpinners(scene, world, rnd) {
