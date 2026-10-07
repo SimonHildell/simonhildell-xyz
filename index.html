@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>simonhildell.xyz · a playground</title>
+  <meta name="description" content="A playground city by Simon Hildell. Walk the rain-soaked streets, find the anomalies, find the workstation." />
+  <meta name="theme-color" content="#07080c" />
+  <meta property="og:title" content="simonhildell.xyz · a playground" />
+  <meta property="og:description" content="Walk a neon megacity, find anomalies built from Simon Hildell's projects, and find his workstation." />
+  <meta property="og:image" content="https://www.simonhildell.xyz/img/og.jpg" />
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <!-- fetch every module in parallel instead of discovering them import by import -->
+  <link rel="modulepreload" href="js/main.js" />
+  <link rel="modulepreload" href="js/util.js" />
+  <link rel="modulepreload" href="js/city.js" />
+  <link rel="modulepreload" href="js/streetlife.js" />
+  <link rel="modulepreload" href="js/vertical.js" />
+  <link rel="modulepreload" href="js/openbuildings.js" />
+  <link rel="modulepreload" href="js/geo.js" />
+  <link rel="modulepreload" href="js/textures.js" />
+  <link rel="modulepreload" href="js/player.js" />
+  <link rel="modulepreload" href="js/input.js" />
+  <link rel="modulepreload" href="js/anomalies.js" />
+  <link rel="modulepreload" href="js/studio.js" />
+  <link rel="modulepreload" href="js/jukebox.js" />
+  <link rel="modulepreload" href="js/tracks.js" />
+  <link rel="modulepreload" href="js/audio.js" />
+  <link rel="modulepreload" href="js/fx.js" />
+  <link rel="modulepreload" href="js/ui.js" />
+  <link rel="modulepreload" href="js/cars.js" />
+  <link rel="modulepreload" href="js/spinner.js" />
+  <link rel="modulepreload" href="js/skylife.js" />
+  <link rel="modulepreload" href="vendor/three/three.module.min.js" />
+  <link rel="modulepreload" href="vendor/three/jsm/postprocessing/EffectComposer.js" />
+  <link rel="modulepreload" href="vendor/three/jsm/postprocessing/RenderPass.js" />
+  <link rel="modulepreload" href="vendor/three/jsm/postprocessing/UnrealBloomPass.js" />
+  <link rel="modulepreload" href="vendor/three/jsm/postprocessing/ShaderPass.js" />
+  <link rel="modulepreload" href="vendor/three/jsm/postprocessing/Pass.js" />
+  <link rel="modulepreload" href="vendor/three/jsm/postprocessing/MaskPass.js" />
+  <link rel="modulepreload" href="vendor/three/jsm/shaders/CopyShader.js" />
+  <link rel="modulepreload" href="vendor/three/jsm/shaders/LuminosityHighPassShader.js" />
+  <script type="importmap">
+    { "imports": {
+      "three": "./vendor/three/three.module.min.js",
+      "three/addons/": "./vendor/three/jsm/"
+    } }
+  </script>
+</head>
+<body>
+  <canvas id="c"></canvas>
+
+  <!-- intro -->
+  <div id="intro">
+    <div class="intro-inner">
+      <div class="kicker">SIMON HILDELL PRESENTS</div>
+      <h1 class="glitch" data-text="SIMONHILDELL.XYZ">SIMONHILDELL.XYZ</h1>
+      <p class="sub">A playground city. Somewhere in it are <b>anomalies</b>, glitches made of things I have built.<br />Somewhere in it is my <b>workstation</b>.</p>
+      <div class="controls desktop-only">
+        <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move</div>
+        <div><kbd>SHIFT</kbd> run · <kbd>SPACE</kbd> jump</div>
+        <div><kbd>DRAG</kbd> look · <kbd>E</kbd> interact</div>
+      </div>
+      <div class="controls touch-only">
+        <div>Left thumb: move (push far to run)</div>
+        <div>Right thumb: look · buttons to interact</div>
+      </div>
+      <div id="loader">
+        <div class="load-row"><span id="load-label">Starting up</span><span id="load-pct">0%</span></div>
+        <div class="load-track"><div id="load-bar"></div></div>
+        <div id="load-hint"></div>
+      </div>
+      <button id="enter" disabled><span id="enter-label">LOADING…</span></button>
+      <p class="fine">Best with sound on. Music via Spotify at the jukebox.</p>
+    </div>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div id="counter">
+      <div class="label">ANOMALIES</div>
+      <div class="num"><span id="count">0</span><span class="of">/10</span></div>
+      <div id="pips"></div>
+      <div id="objective">Explore. Find the glitches.</div>
+    </div>
+    <div id="top-btns">
+      <button id="btn-music" title="Jukebox">♪</button>
+      <button id="btn-sound" title="Ambient sound">SND</button>
+      <button id="btn-help" title="Help">?</button>
+    </div>
+    <canvas id="radar" width="280" height="280"></canvas>
+    <div id="nowplaying" class="hidden"><span class="dot"></span><span id="np-text"></span></div>
+    <div id="prompt" class="hidden"><kbd class="desktop-only">E</kbd><span id="prompt-text"></span></div>
+    <button id="act-btn" class="hidden">INTERACT</button>
+    <button id="jump-btn" class="touch-only">JUMP</button>
+    <div id="fly-ui" class="hidden"><button id="fly-up">▲</button><button id="fly-down">▼</button></div>
+    <div id="fly-hint" class="hidden"><span class="desktop-only"><kbd>W</kbd><kbd>S</kbd> throttle · <kbd>A</kbd><kbd>D</kbd> steer · <kbd>SPACE</kbd> up · <kbd>Q</kbd> down · <kbd>SHIFT</kbd> boost · <kbd>E</kbd> land</span><span class="touch-only">Left thumb: fly · ▲▼ altitude · button to land</span></div>
+    <div id="toast" class="hidden"></div>
+  </div>
+
+  <!-- anomaly card -->
+  <div id="card" class="hidden" role="dialog" aria-live="polite">
+    <button class="close" id="card-close" aria-label="Close">✕</button>
+    <div class="card-kicker">ANOMALY <span id="card-n"></span> · DETECTED</div>
+    <h2 id="card-title"></h2>
+    <div id="card-tag"></div>
+    <div id="card-img-wrap"><img id="card-img" alt="" /></div>
+    <p id="card-text"></p>
+    <div id="card-credit"></div>
+    <div id="card-actions">
+      <button id="card-link">OPEN PROJECT ↗</button>
+      <div id="card-note"></div>
+    </div>
+  </div>
+
+  <!-- leaving mid-game -->
+  <div id="leave" class="modal hidden" role="dialog">
+    <div class="modal-inner">
+      <div class="modal-kicker">HOLD ON</div>
+      <p>You haven't finished the game yet. The project opens in a new tab, and your progress stays saved here.</p>
+      <div class="modal-btns">
+        <a id="leave-go" target="_blank" rel="noopener">OPEN ANYWAY ↗</a>
+        <button id="leave-stay">KEEP PLAYING</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9/9 -->
+  <div id="breach" class="hidden"><div class="breach-text" data-text="SIMULATION BREACHED">SIMULATION BREACHED</div></div>
+  <div id="complete" class="modal hidden" role="dialog">
+    <div class="modal-inner">
+      <div class="modal-kicker">10/10 · ALL ANOMALIES FOUND</div>
+      <h2>You found all ten.</h2>
+      <p>Okay, I did not expect anyone to actually do this. You now know my city better than most people know my portfolio.</p>
+      <p>Send me a mail and tell me you made it, I read everything. The rain has stopped and the sun is coming up, so go run around a bit. And if you haven't found my desk yet, it's by the Sea Wall.</p>
+      <p class="sig">/ Simon</p>
+      <div class="modal-btns">
+        <a id="complete-mail" href="mailto:simon@hildell.com">EMAIL SIMON</a>
+        <button id="complete-stay">KEEP EXPLORING</button>
+        <button id="complete-again">PLAY AGAIN</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- jukebox -->
+  <div id="jukebox" class="hidden" role="dialog">
+    <div class="jb-head">
+      <div>
+        <div class="jb-kicker">JUKEBOX</div>
+        <div class="jb-title">Works insta</div>
+      </div>
+      <button class="close" id="jb-close" aria-label="Close">✕</button>
+    </div>
+    <div class="jb-controls">
+      <button id="jb-prev">◀◀</button>
+      <button id="jb-play">▶</button>
+      <button id="jb-next">▶▶</button>
+      <button id="jb-shuffle">SHUFFLE</button>
+    </div>
+    <input id="jb-search" placeholder="search the playlist…" autocomplete="off" />
+    <ol id="jb-list"></ol>
+    <div class="jb-foot">Full tracks if you're logged in to Spotify in this browser, 30-second previews otherwise. <a id="jb-open" target="_blank" rel="noopener">Open the playlist in Spotify ↗</a></div>
+  </div>
+  <div id="spotify-dock" class="hidden"><div id="spotify-embed"></div></div>
+
+  <!-- desk -->
+  <div id="desk-ui" class="hidden">
+    <div class="desk-row">
+      <a id="desk-open" class="hidden" href="https://www.simonhildell.com" target="_blank" rel="noopener">OPEN SIMONHILDELL.COM ↗</a>
+      <button id="desk-back">BACK TO THE CITY</button>
+      <button id="desk-again" class="hidden">PLAY AGAIN</button>
+    </div>
+    <a id="desk-insta" class="hidden" href="https://www.instagram.com/simonhildellworks/" target="_blank" rel="noopener">instagram · @simonhildellworks</a>
+  </div>
+
+  <!-- help -->
+  <div id="help" class="hidden">
+    <div class="help-inner">
+      <h3>HOW TO PLAY</h3>
+      <p>Walk the city and find the <b>10 anomalies</b>. Look for the light pillars and the flickering glyphs. The radar shows nearby signals.</p>
+      <p>Some are up on the <b>skyways</b>: find the stairs. Parked <b>spinners</b> with a glowing ring can be flown: walk up and press <kbd>E</kbd>. When three have been found, a beacon lights up over the <b>studio</b>. Find the workstation to finish.</p>
+      <div class="controls desktop-only"><div><kbd>WASD</kbd> move · <kbd>SHIFT</kbd> run · <kbd>SPACE</kbd> jump · <kbd>DRAG</kbd> look · <kbd>E</kbd> interact · <kbd>M</kbd> jukebox</div></div>
+      <div class="controls touch-only"><div>Left thumb move · right thumb look</div></div>
+      <button id="help-reset">PLAY AGAIN</button>
+      <button id="help-close">CLOSE</button>
+    </div>
+  </div>
+
+  <div id="joy"><div id="joy-knob"></div></div>
+  <noscript>This playground needs JavaScript and WebGL. The curated portfolio lives at <a href="https://www.simonhildell.com">simonhildell.com</a>.</noscript>
+  <div id="fallback" class="hidden">Your browser can't run WebGL. The curated portfolio lives at <a href="https://www.simonhildell.com">simonhildell.com</a>.</div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
